@@ -1,0 +1,27 @@
+insert into public.jobs (
+  title, description, location, contact, expires_on, posted_by_name, job_type, status, created_at
+) values
+  ('CDL Truck Driver',
+   'Looking for experienced Class A CDL driver. Local routes, home daily. Competitive pay $1,400-$1,800/week. Bilingual welcome.',
+   'Royse City, TX', '+1 (469) 555-0211 — driving@texaslog.com', '2026-04-30',
+   'Texas Logistics LLC', 'Full-time', 'approved', now() - interval '2 days'),
+  ('Home Health Aide (HHA)',
+   'Certified HHA needed for elderly client in Rockwall. Day shifts, weekends optional. Training provided.',
+   'Rockwall, TX', '+1 (972) 555-0177', '2026-04-15',
+   'Caring Hands Agency', 'Part-time', 'approved', now() - interval '5 days'),
+  ('Warehouse Associate — Amazon facility',
+   'Multiple openings. $19.50/hour starting. Health insurance after 30 days. No experience required.',
+   'Forney, TX', 'apply@hireexpress.com', '2026-05-10',
+   'Hire Express Staffing', 'Full-time', 'approved', now() - interval '7 days'),
+  ('Babysitter (French-speaking)',
+   'Family looking for a trusted French-speaking babysitter, 3 evenings per week. References required.',
+   'Dallas, TX', '+1 (214) 555-0123 (WhatsApp)', '2026-03-31',
+   'Mme Nkomo', 'Part-time', 'approved', now() - interval '3 days'),
+  ('Volunteer — Cultural Festival 2026',
+   'Volunteers needed for setup, registration and food booth on April 12th. T-shirt and meal provided.',
+   'Royse City, TX', 'volunteer@rcconnect.app', '2026-04-10',
+   'Royse City African Community', 'Volunteer', 'approved', now() - interval '1 day'),
+  ('Part-time cashier — pending review',
+   'Weekend cashier needed at local grocery store. Bilingual French/English preferred.',
+   'Rockwall, TX', 'jobs@example.com', '2026-05-01',
+   'Local Market', 'Part-time', 'pending', now());

@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #1E3A5F;
+  --color-navy-dark: #15294A;
+  --color-navy-light: #2C4E7A;
+  --color-crimson: #C8364A;
+  --color-crimson-dark: #A82A3C;
+  --color-crimson-light: #E15366;
+  --color-cream: #FAF8F5;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Hide scrollbar in phone frame */
+.phone-scroll::-webkit-scrollbar { width: 0; display: none; }
+.phone-scroll { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.overscroll-x-contain { overscroll-behavior-x: contain; }
+
+/* Subtle pattern background */
+.bg-pattern {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(30,58,95,0.06) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
+.pulse-dot { animation: pulseDot 1.8s ease-in-out infinite; }
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up { animation: slideUp 0.4s ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.animate-float-slow { animation: floatSlow 6s ease-in-out infinite; }
+
+@keyframes welcomeLogo {
+  0% { transform: scale(0.85); opacity: 0; }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-welcome-logo { animation: welcomeLogo 0.8s ease-out both; }
+
+@keyframes staggerIn {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-stagger-in { animation: staggerIn 0.5s ease-out both; }
+
+@keyframes heroIn {
+  from { opacity: 0; transform: scale(0.97) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-hero-in { animation: heroIn 0.45s ease-out both; }
