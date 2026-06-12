@@ -7,7 +7,8 @@ create extension if not exists "pgcrypto";
 -- Enums
 create type public.user_role as enum ('member', 'business', 'admin');
 create type public.post_category as enum (
-  'news', 'immigration', 'church', 'association', 'fundraiser', 'funeral', 'alert'
+  'news', 'immigration', 'church', 'association', 'fundraiser', 'funeral', 'alert',
+  'hospitality', 'realestate'
 );
 create type public.content_status as enum ('pending', 'approved', 'rejected');
 create type public.job_type as enum ('Full-time', 'Part-time', 'Contract', 'Volunteer');
@@ -227,12 +228,21 @@ create policy "Admins can manage all businesses"
   using (public.is_admin());
 
 -- Events
-create policy "Approved events are public"
+create policy "Events visible to public, organizers and admins"
   on public.events for select
-  using (status = 'approved' or public.is_admin());
+  using (
+    status = 'approved'
+    or auth.uid() = organizer_id
+    or public.is_admin()
+  );
 
 create policy "Authenticated users can create events"
   on public.events for insert
+  with check (auth.uid() = organizer_id);
+
+create policy "Organizers can update own pending events"
+  on public.events for update
+  using (auth.uid() = organizer_id and status = 'pending')
   with check (auth.uid() = organizer_id);
 
 create policy "Admins can manage all events"
@@ -264,6 +274,10 @@ create policy "Users can mark own notifications read"
 create policy "Admins can create notifications"
   on public.notifications for insert
   with check (public.is_admin());
+
+create policy "Users can receive own notifications"
+  on public.notifications for insert
+  with check (auth.uid() = user_id or public.is_admin());
 
 -- Indexes
 create index posts_status_created_idx on public.posts (status, created_at desc);

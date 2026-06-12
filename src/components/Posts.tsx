@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useT, TKey } from '../i18n';
-import { Post, PostCategory, categoryColors, categoryEmoji } from '../data';
+import { Post, FeedCategory, categoryColors, categoryEmoji } from '../data';
+import { getFeedCategory } from '../services/posts';
+import type { Page } from './Layout';
 import { ModalSheet } from './Layout';
 import { HeartIcon, ShareIcon, FlagIcon, BookmarkIcon } from './Icons';
 import { isPostSaved, toggleSavePost } from '../utils/saved';
@@ -9,10 +11,12 @@ export function formatPostDate(d: string) {
   return new Date(d + (d.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function labelFor(c: PostCategory, t: (k: TKey) => string) {
-  const map: Record<PostCategory, TKey> = {
+function labelFor(c: FeedCategory, t: (k: TKey) => string) {
+  const map: Record<FeedCategory, TKey> = {
     news: 'catNews', immigration: 'catImmigration', church: 'catChurch',
     association: 'catAssociation', fundraiser: 'catFundraiser', funeral: 'catFuneral', alert: 'catAlert',
+    hospitality: 'catHospitality', realestate: 'catRealestate',
+    event: 'catEvent', job: 'catJob', business: 'catBusiness',
   };
   return t(map[c]);
 }
@@ -29,8 +33,8 @@ export function PostCard({ post, onOpen }: { post: Post; onOpen: (p: Post) => vo
       className="w-full text-left bg-white rounded-2xl p-4 border border-slate-100 shadow-sm active:scale-[0.99] transition"
     >
       <div className="flex items-center gap-2 mb-2">
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${categoryColors[post.category]}`}>
-          {categoryEmoji[post.category]} {labelFor(post.category, t)}
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${categoryColors[getFeedCategory(post)]}`}>
+          {categoryEmoji[getFeedCategory(post)]} {labelFor(getFeedCategory(post), t)}
         </span>
         {post.important && <span className="text-[10px] font-bold text-crimson">⚡ {t('new').toUpperCase()}</span>}
         <span className="text-[10px] text-slate-400 ml-auto">{formatPostDate(post.date)}</span>
@@ -72,7 +76,7 @@ export function PinnedPostCard({ post, onOpen }: { post: Post; onOpen: (p: Post)
         📌 {t('pinned').toUpperCase()}
       </div>
       <div className="flex items-start gap-2 mt-1">
-        <div className="text-2xl">{categoryEmoji[post.category]}</div>
+        <div className="text-2xl">{categoryEmoji[getFeedCategory(post)]}</div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-navy text-sm leading-tight">{post.title}</h3>
           <p className="text-xs text-slate-600 mt-1 line-clamp-3">{post.body}</p>
@@ -89,11 +93,12 @@ export function PinnedPostCard({ post, onOpen }: { post: Post; onOpen: (p: Post)
 }
 
 export function PostDetailSheet({
-  post, open, onClose,
+  post, open, onClose, onOpenLink,
 }: {
   post: Post | null;
   open: boolean;
   onClose: () => void;
+  onOpenLink?: (post: Post) => void;
 }) {
   const { t } = useT();
   const [saved, setSaved] = useState(false);
@@ -127,8 +132,8 @@ export function PostDetailSheet({
     <ModalSheet open={open} onClose={onClose} title={post.title}>
       <div className="p-4 pb-8 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${categoryColors[post.category]}`}>
-            {categoryEmoji[post.category]} {labelFor(post.category, t)}
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${categoryColors[getFeedCategory(post)]}`}>
+            {categoryEmoji[getFeedCategory(post)]} {labelFor(getFeedCategory(post), t)}
           </span>
           <span className="text-[10px] text-slate-400">{formatPostDate(post.date)} • {post.city}</span>
         </div>
@@ -141,6 +146,16 @@ export function PostDetailSheet({
           <div><span className="font-bold text-navy">{t('postedBy')}:</span> {post.author}</div>
           <div className="mt-1"><span className="font-bold text-navy">{t('city')}:</span> {post.city}</div>
         </div>
+
+        {post.linkPage && onOpenLink && (
+          <button
+            type="button"
+            onClick={() => onOpenLink(post)}
+            className="w-full bg-navy text-white font-bold py-3 rounded-xl text-sm"
+          >
+            {post.linkPage === 'events' ? t('openInEvents') : post.linkPage === 'opportunities' ? t('openInJobs') : t('openInBusinesses')} →
+          </button>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <ActionBtn

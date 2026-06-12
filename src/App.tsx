@@ -116,7 +116,7 @@ function AppContent() {
           ) : (
             <>
               {page === 'home' && <Home user={user} goTo={setPage} onOpenFeedback={() => setFeedbackOpen(true)} />}
-              {page === 'news' && <News user={user} />}
+              {page === 'news' && <News user={user} goTo={setPage} />}
               {page === 'businesses' && <Businesses user={user} />}
               {page === 'events' && <Events user={user} />}
               {page === 'opportunities' && <Opportunities user={user} />}

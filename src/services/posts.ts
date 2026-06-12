@@ -2,12 +2,16 @@ import type { Post, PostCategory } from '../data';
 import type { ContentStatus, DbPost } from '../types/database';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import { createNotification } from './notifications';
+import { fetchApprovedEvents } from './events';
+import { fetchApprovedJobs } from './jobs';
+import { fetchApprovedBusinesses } from './businesses';
 import { posts as mockPosts } from '../data';
 
 function toAppPost(row: DbPost): Post {
   return {
     id: row.id,
     category: row.category,
+    feedCategory: row.category,
     title: row.title,
     body: row.body,
     author: row.author_name,
@@ -18,7 +22,78 @@ function toAppPost(row: DbPost): Post {
     status: row.status,
     image: row.image_url ?? undefined,
     reactions: row.reactions_count,
+    sourceType: 'post',
+    sourceId: row.id,
   };
+}
+
+export function getFeedCategory(post: Post) {
+  return post.feedCategory ?? post.category;
+}
+
+export async function fetchCommunityFeed(): Promise<Post[]> {
+  const [postRows, events, jobs, businesses] = await Promise.all([
+    fetchApprovedPosts(),
+    fetchApprovedEvents(),
+    fetchApprovedJobs(),
+    fetchApprovedBusinesses(),
+  ]);
+
+  const fromEvents: Post[] = events.map((e) => ({
+    id: `event-${e.id}`,
+    category: 'news',
+    feedCategory: 'event',
+    title: e.title,
+    body: `${e.description}\n\n📅 ${e.date} • ${e.time}\n📍 ${e.location}`,
+    author: e.organizer,
+    city: e.city,
+    date: e.date,
+    status: 'approved',
+    image: e.image,
+    sourceType: 'event',
+    sourceId: e.id,
+    linkPage: 'events',
+  }));
+
+  const fromJobs: Post[] = jobs.map((j) => ({
+    id: `job-${j.id}`,
+    category: 'news',
+    feedCategory: 'job',
+    title: j.title,
+    body: `${j.description}\n\n📍 ${j.location}\n💼 ${j.type}${j.expires ? `\n⏳ Expires ${j.expires}` : ''}`,
+    author: j.postedBy,
+    city: j.location.split(',')[0] || 'Royse City',
+    date: new Date().toISOString().slice(0, 10),
+    status: 'approved',
+    image: j.image,
+    sourceType: 'job',
+    sourceId: j.id,
+    linkPage: 'opportunities',
+  }));
+
+  const fromBusinesses: Post[] = businesses.map((b) => ({
+    id: `business-${b.id}`,
+    category: b.category.toLowerCase().includes('real estate') ? 'realestate' : b.category.toLowerCase().includes('hotel') || b.category.toLowerCase().includes('hospitality') ? 'hospitality' : 'news',
+    feedCategory: 'business',
+    title: b.name,
+    body: `${b.description}\n\n🏷️ ${b.category}${b.address ? `\n📍 ${b.address}` : ''}\n📞 ${b.phone}`,
+    author: b.owner,
+    city: b.city,
+    date: b.createdAt.slice(0, 10),
+    status: 'approved',
+    image: b.image,
+    sourceType: 'business',
+    sourceId: b.id,
+    linkPage: 'businesses',
+  }));
+
+  const merged = [...postRows, ...fromEvents, ...fromJobs, ...fromBusinesses];
+
+  return merged.sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.date.localeCompare(a.date);
+  });
 }
 
 export async function fetchApprovedPosts(): Promise<Post[]> {

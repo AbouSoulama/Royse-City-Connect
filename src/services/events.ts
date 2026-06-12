@@ -117,9 +117,18 @@ export async function createEvent(input: {
     return { error: 'Supabase not configured' };
   }
 
+  const supabase = getSupabase();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) {
+    return { error: 'You must be signed in to create an event.' };
+  }
+  if (session.user.id !== input.organizerId) {
+    return { error: 'Session mismatch. Please sign out and sign in again.' };
+  }
+
   const meta = eventMeta[Math.floor(Math.random() * eventMeta.length)];
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('events')
     .insert({
       organizer_id: input.organizerId,
@@ -147,7 +156,7 @@ export async function createEvent(input: {
     body: 'Your event is pending admin review.',
   });
 
-  return { event: toAppEvent(data) };
+  return { event: data ? toAppEvent(data) : undefined };
 }
 
 export async function updateEventStatus(

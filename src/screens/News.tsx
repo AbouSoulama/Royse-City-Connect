@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useT, TKey } from '../i18n';
-import { Post, PostCategory, categoryEmoji, cities } from '../data';
-import { SectionHeader, ModalSheet } from '../components/Layout';
+import { Post, PostCategory, FeedCategory, categoryEmoji, cities } from '../data';
+import { ModalSheet, Page } from '../components/Layout';
 import { PostCard, PostDetailSheet } from '../components/Posts';
 import { ImageUpload } from '../components/ImageUpload';
 import { PlusIcon } from '../components/Icons';
 import { AuthUser } from '../types/auth';
-import { createPost, fetchApprovedPosts } from '../services/posts';
+import { createPost, fetchCommunityFeed, getFeedCategory } from '../services/posts';
 
-const catFilters: { key: PostCategory | 'all'; tkey: TKey }[] = [
+type NewsFilter = FeedCategory | 'all';
+
+const catFilters: { key: NewsFilter; tkey: TKey }[] = [
   { key: 'all', tkey: 'catAll' },
   { key: 'news', tkey: 'catNews' },
+  { key: 'hospitality', tkey: 'catHospitality' },
+  { key: 'realestate', tkey: 'catRealestate' },
+  { key: 'event', tkey: 'catEvent' },
+  { key: 'job', tkey: 'catJob' },
+  { key: 'business', tkey: 'catBusiness' },
   { key: 'immigration', tkey: 'catImmigration' },
   { key: 'alert', tkey: 'catAlert' },
   { key: 'church', tkey: 'catChurch' },
@@ -19,9 +26,9 @@ const catFilters: { key: PostCategory | 'all'; tkey: TKey }[] = [
   { key: 'funeral', tkey: 'catFuneral' },
 ];
 
-export function News({ user }: { user: AuthUser }) {
+export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void }) {
   const { t } = useT();
-  const [filter, setFilter] = useState<PostCategory | 'all'>('all');
+  const [filter, setFilter] = useState<NewsFilter>('all');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Post | null>(null);
@@ -29,7 +36,7 @@ export function News({ user }: { user: AuthUser }) {
 
   const load = () => {
     setLoading(true);
-    fetchApprovedPosts().then((data) => {
+    fetchCommunityFeed().then((data) => {
       setPosts(data);
       setLoading(false);
     });
@@ -37,7 +44,16 @@ export function News({ user }: { user: AuthUser }) {
 
   useEffect(() => { load(); }, []);
 
-  const filtered = posts.filter((p) => filter === 'all' || p.category === filter);
+  const filtered = posts.filter((p) => {
+    if (filter === 'all') return true;
+    return getFeedCategory(p) === filter;
+  });
+
+  const handleOpenLink = (post: Post) => {
+    if (!goTo || !post.linkPage) return;
+    setSelected(null);
+    goTo(post.linkPage);
+  };
 
   return (
     <div className="pb-4">
@@ -45,7 +61,7 @@ export function News({ user }: { user: AuthUser }) {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-extrabold text-navy">{t('latestNews')}</h1>
-            <p className="text-xs text-slate-500">{filtered.length} announcements</p>
+            <p className="text-xs text-slate-500">{filtered.length} items</p>
           </div>
           {!user.guest && user.id && (
             <button onClick={() => setPostOpen(true)} className="flex items-center gap-1 bg-crimson text-white text-xs font-bold px-3 py-2 rounded-xl">
@@ -53,18 +69,20 @@ export function News({ user }: { user: AuthUser }) {
             </button>
           )}
         </div>
-        <div className="flex gap-2 mt-3 overflow-x-auto phone-scroll -mx-4 px-4 pb-1">
-          {catFilters.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-                filter === f.key ? 'bg-navy text-white shadow' : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              {t(f.tkey)}
-            </button>
-          ))}
+        <div className="overflow-x-auto phone-scroll overscroll-x-contain mt-3 pb-1">
+          <div className="flex gap-2 w-max px-0.5">
+            {catFilters.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                  filter === f.key ? 'bg-navy text-white shadow' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {t(f.tkey)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -78,7 +96,12 @@ export function News({ user }: { user: AuthUser }) {
         )}
       </div>
 
-      <PostDetailSheet post={selected} open={!!selected} onClose={() => setSelected(null)} />
+      <PostDetailSheet
+        post={selected}
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        onOpenLink={goTo ? handleOpenLink : undefined}
+      />
 
       <ModalSheet open={postOpen} onClose={() => setPostOpen(false)} title="Post announcement">
         <CreatePostForm user={user} onClose={() => setPostOpen(false)} onSuccess={() => { setPostOpen(false); load(); }} />
@@ -131,7 +154,10 @@ function CreatePostForm({ user, onClose, onSuccess }: { user: AuthUser; onClose:
     setSuccess(true);
   };
 
-  const categories: PostCategory[] = ['news', 'immigration', 'church', 'association', 'fundraiser', 'funeral', 'alert'];
+  const categories: PostCategory[] = [
+    'news', 'hospitality', 'realestate', 'immigration', 'church',
+    'association', 'fundraiser', 'funeral', 'alert',
+  ];
 
   return (
     <div className="p-4 space-y-3 pb-6">

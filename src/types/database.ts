@@ -1,5 +1,7 @@
 export type UserRole = 'member' | 'business' | 'admin';
-export type PostCategory = 'news' | 'immigration' | 'church' | 'association' | 'fundraiser' | 'funeral' | 'alert';
+export type PostCategory =
+  | 'news' | 'immigration' | 'church' | 'association' | 'fundraiser' | 'funeral' | 'alert'
+  | 'hospitality' | 'realestate';
 export type ContentStatus = 'pending' | 'approved' | 'rejected';
 export type JobType = 'Full-time' | 'Part-time' | 'Contract' | 'Volunteer';
 

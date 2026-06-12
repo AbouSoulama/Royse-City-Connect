@@ -26,8 +26,8 @@ export function PhoneShell({
   const [langOpen, setLangOpen] = useState(false);
 
   return (
-    <div className="min-h-screen w-full bg-slate-200 bg-pattern flex items-center justify-center md:p-6">
-      <div className="w-full md:w-[420px] md:h-[860px] h-screen bg-white md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative overflow-hidden flex flex-col">
+    <div className="h-dvh w-full overflow-hidden bg-slate-200 bg-pattern flex items-stretch md:items-center justify-center md:p-6">
+      <div className="w-full h-full md:w-[420px] md:h-[860px] md:max-h-[calc(100dvh-3rem)] bg-white md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative overflow-hidden flex flex-col">
         <div className="hidden md:flex absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl z-50 items-end justify-center pb-1">
           <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
           <div className="w-12 h-1.5 rounded-full bg-slate-700" />
@@ -86,7 +86,7 @@ export function PhoneShell({
         </main>
 
         {!hideNav && (
-          <nav className="shrink-0 bg-white border-t border-slate-200 px-1 pb-3 pt-2 grid grid-cols-5 gap-0.5">
+          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-1 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] grid grid-cols-5 gap-0.5">
             <NavBtn icon={<HomeIcon size={20} />} label={t('home')} active={page === 'home'} onClick={() => setPage('home')} />
             <NavBtn icon={<NewsIcon size={20} />} label={t('news')} active={page === 'news'} onClick={() => setPage('news')} />
             <NavBtn icon={<StoreIcon size={20} />} label={t('businesses')} active={page === 'businesses'} onClick={() => setPage('businesses')} />

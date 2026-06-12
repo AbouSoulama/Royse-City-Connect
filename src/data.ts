@@ -1,8 +1,15 @@
-export type PostCategory = 'news' | 'immigration' | 'church' | 'association' | 'fundraiser' | 'funeral' | 'alert';
+export type PostCategory =
+  | 'news' | 'immigration' | 'church' | 'association' | 'fundraiser' | 'funeral' | 'alert'
+  | 'hospitality' | 'realestate';
+
+/** Includes content types shown in the community feed (not all are post DB categories). */
+export type FeedCategory = PostCategory | 'event' | 'job' | 'business';
 
 export interface Post {
   id: string;
   category: PostCategory;
+  /** Badge/filter category — events, jobs, businesses use feedCategory. */
+  feedCategory?: FeedCategory;
   title: string;
   body: string;
   author: string;
@@ -13,6 +20,9 @@ export interface Post {
   status: 'approved' | 'pending' | 'rejected';
   image?: string;
   reactions?: number;
+  sourceType?: 'post' | 'event' | 'job' | 'business';
+  sourceId?: string;
+  linkPage?: 'events' | 'opportunities' | 'businesses';
 }
 
 export interface Business {
@@ -371,7 +381,7 @@ export const notifications = [
   { id: 'n5', type: 'event', title: 'Immigration clinic Saturday', body: 'Free legal consultations from 10am to 3pm.', time: '3d ago', unread: false },
 ];
 
-export const categoryColors: Record<PostCategory, string> = {
+export const categoryColors: Record<FeedCategory, string> = {
   news: 'bg-blue-100 text-blue-700',
   immigration: 'bg-indigo-100 text-indigo-700',
   church: 'bg-purple-100 text-purple-700',
@@ -379,9 +389,14 @@ export const categoryColors: Record<PostCategory, string> = {
   fundraiser: 'bg-amber-100 text-amber-700',
   funeral: 'bg-slate-200 text-slate-700',
   alert: 'bg-red-100 text-red-700',
+  hospitality: 'bg-orange-100 text-orange-700',
+  realestate: 'bg-teal-100 text-teal-700',
+  event: 'bg-violet-100 text-violet-700',
+  job: 'bg-sky-100 text-sky-700',
+  business: 'bg-rose-100 text-rose-700',
 };
 
-export const categoryEmoji: Record<PostCategory, string> = {
+export const categoryEmoji: Record<FeedCategory, string> = {
   news: '📰',
   immigration: '🛂',
   church: '⛪',
@@ -389,7 +404,12 @@ export const categoryEmoji: Record<PostCategory, string> = {
   fundraiser: '💝',
   funeral: '🕊️',
   alert: '🚨',
+  hospitality: '🏨',
+  realestate: '🏠',
+  event: '📅',
+  job: '💼',
+  business: '🏪',
 };
 
-export const businessCategories = ['Grocery', 'Restaurant', 'Automotive', 'Beauty', 'Services', 'Fashion', 'Health', 'Real Estate'];
+export const businessCategories = ['Grocery', 'Restaurant', 'Hospitality', 'Hotels', 'Real Estate', 'Automotive', 'Beauty', 'Services', 'Fashion', 'Health'];
 export const cities = ['Royse City', 'Dallas', 'Rockwall', 'Forney', 'Garland', 'Plano'];

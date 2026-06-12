@@ -106,7 +106,7 @@ export function Profile({
   const displayEmail = settings.showEmail ? user.email : null;
 
   return (
-    <div className="pb-4 min-h-full bg-slate-50">
+    <div className="pb-4 bg-slate-50">
       <div className="bg-gradient-to-br from-navy via-navy-dark to-navy-light text-white px-4 pt-4 pb-8 rounded-b-3xl relative">
         <button onClick={onBack} className="absolute top-4 left-4 p-2 rounded-full bg-white/15 z-10">
           <ChevronLeft size={20} />
