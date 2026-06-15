@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Lang, LangContext, translations, TKey } from './i18n';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth, isOAuthCallback } from './contexts/AuthContext';
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
 import { useNotifications } from './hooks/useNotifications';
-import { PhoneShell, ModalSheet } from './components/Layout';
+import { PhoneShell, ModalSheet, LoadingScreen } from './components/Layout';
 import { Welcome, Onboarding } from './screens/Onboarding';
 import { Auth } from './screens/Auth';
 import { Home } from './screens/Home';
@@ -56,19 +56,25 @@ function AppContent() {
     }
   }, [loading, user, setStage, setPage]);
 
+  useEffect(() => {
+    if (authError && !user && !loading && !oauthCompleting) {
+      setAuthMode('signin');
+      setStage('auth');
+    }
+  }, [authError, user, loading, oauthCompleting, setAuthMode, setStage]);
+
   const ctx = useMemo(
     () => ({ lang, setLang, t: (k: TKey) => translations[lang][k] }),
     [lang]
   );
 
-  if (loading || oauthCompleting) {
+  const showBootScreen = loading || oauthCompleting || (isOAuthCallback() && !user);
+
+  if (showBootScreen) {
     return (
       <LangContext.Provider value={ctx}>
-        <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav>
-          <div className="flex flex-col items-center justify-center min-h-full text-slate-500 text-sm gap-3 p-6">
-            <div className="w-10 h-10 rounded-full border-2 border-navy border-t-transparent animate-spin" />
-            <p>{oauthCompleting ? (lang === 'fr' ? 'Connexion Google en cours…' : 'Signing in with Google…') : (lang === 'fr' ? 'Chargement…' : 'Loading…')}</p>
-          </div>
+        <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav fillScreen>
+          <LoadingScreen message={oauthCompleting || isOAuthCallback() ? (lang === 'fr' ? 'Connexion Google en cours…' : 'Signing in with Google…') : (lang === 'fr' ? 'Chargement…' : 'Loading…')} />
         </PhoneShell>
       </LangContext.Provider>
     );
@@ -77,7 +83,7 @@ function AppContent() {
   if (recoveryMode && !user?.guest) {
     return (
       <LangContext.Provider value={ctx}>
-        <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav>
+        <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav fillScreen>
           <Auth
             recoveryMode
             onSuccess={() => {
@@ -91,7 +97,7 @@ function AppContent() {
     );
   }
 
-  const effectiveStage = user && !user.guest ? 'app' : stage;
+  const effectiveStage = user && !user.guest ? 'app' : (stage === 'app' && !user ? 'welcome' : stage);
 
   const shellProps = {
     page,

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import type { AuthUser } from '../types/auth';
 import type { Profile } from '../types/database';
@@ -29,7 +29,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const AUTH_INIT_TIMEOUT_MS = 12000;
+const AUTH_INIT_TIMEOUT_MS = 15000;
 const OAUTH_PENDING_KEY = 'rc_oauth_pending';
 
 function profileToUser(profile: Profile, email?: string): AuthUser {
@@ -82,36 +82,30 @@ function readOAuthError(): string | null {
 
 function cleanOAuthUrl() {
   const url = new URL(window.location.href);
-  let dirty = false;
   for (const key of ['code', 'error', 'error_description', 'access_token', 'refresh_token', 'type']) {
-    if (url.searchParams.has(key)) {
-      url.searchParams.delete(key);
-      dirty = true;
-    }
+    url.searchParams.delete(key);
   }
   if (url.hash.includes('access_token') || url.hash.includes('error') || url.hash.includes('type=recovery')) {
     url.hash = '#home';
-    dirty = true;
   }
-  if (dirty || !url.hash || url.hash === '#welcome' || url.hash === '#') {
+  if (!url.hash || url.hash === '#welcome' || url.hash === '#') {
     url.hash = '#home';
-    dirty = true;
   }
-  if (dirty) {
-    const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '') + url.hash;
-    window.history.replaceState({ stage: 'app', page: 'home', overlay: 'none', detail: null }, document.title, clean);
-  }
+  const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '') + url.hash;
+  window.history.replaceState({ stage: 'app', page: 'home', overlay: 'none', detail: null }, document.title, clean);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
-  const [oauthCompleting, setOauthCompleting] = useState(() => isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1');
+  const [oauthCompleting, setOauthCompleting] = useState(() => isOAuthCallback());
   const [authError, setAuthError] = useState<string | null>(() => readOAuthError());
+  const sessionHandled = useRef(false);
 
   const loadProfile = useCallback(async (authUser: User): Promise<void> => {
-    const supabase = getSupabase();
+    setUser(userFromAuth(authUser));
 
+    const supabase = getSupabase();
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -124,8 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      for (let attempt = 0; attempt < 5; attempt++) {
-        await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+      for (let attempt = 0; attempt < 4; attempt++) {
+        await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
         const { data: retry } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
         if (retry) {
           setUser(profileToUser(retry, authUser.email));
@@ -135,8 +129,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error('[auth] profile load failed:', e);
     }
-
-    setUser(userFromAuth(authUser));
   }, []);
 
   useEffect(() => {
@@ -148,92 +140,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const supabase = getSupabase();
     let mounted = true;
+    sessionHandled.current = false;
 
-    const oauthFlow = isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1';
-
-    const finishLoading = (force = false) => {
+    const finishAuth = () => {
       if (!mounted) return;
-      if (!force && oauthFlow && !authError) {
-        // Keep spinner until profile is loaded or OAuth fails
-        return;
-      }
       setLoading(false);
       setOauthCompleting(false);
     };
 
-    const timeout = window.setTimeout(() => finishLoading(true), AUTH_INIT_TIMEOUT_MS);
-
-    const handleSession = async (authUser: User, event: string) => {
+    const handleSession = async (authUser: User) => {
+      if (sessionHandled.current) return;
+      sessionHandled.current = true;
+      setOauthCompleting(true);
       await loadProfile(authUser);
       if (!mounted) return;
       sessionStorage.removeItem(OAUTH_PENDING_KEY);
-      setOauthCompleting(false);
       setAuthError(null);
+      setOauthCompleting(false);
       setLoading(false);
-      if (event === 'SIGNED_IN' || isOAuthCallback()) {
-        cleanOAuthUrl();
-      }
-      window.clearTimeout(timeout);
+      if (isOAuthCallback()) cleanOAuthUrl();
     };
+
+    const timeout = window.setTimeout(() => {
+      sessionStorage.removeItem(OAUTH_PENDING_KEY);
+      finishAuth();
+    }, AUTH_INIT_TIMEOUT_MS);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-
-      if (session?.user) {
-        void handleSession(session.user, event);
-      } else if (!session) {
-        const pending = sessionStorage.getItem(OAUTH_PENDING_KEY) === '1' || isOAuthCallback();
-        if (pending && (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT')) {
-          return;
-        }
-        setUser((prev) => (prev?.guest ? prev : null));
-        if (event === 'INITIAL_SESSION' && !pending) {
+      if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
+        void handleSession(session.user);
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        if (!isOAuthCallback() && sessionStorage.getItem(OAUTH_PENDING_KEY) !== '1') {
           window.clearTimeout(timeout);
-          finishLoading(true);
+          finishAuth();
         }
       }
     });
 
     const initAuth = async () => {
       try {
-        if (isOAuthCallback()) {
+        if (isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1') {
           setOauthCompleting(true);
         }
 
-        // detectSessionInUrl exchanges ?code= — retry getSession while OAuth finishes
-        let session = null;
-        const attempts = isOAuthCallback() ? 8 : 1;
-        for (let i = 0; i < attempts; i++) {
-          const { data, error } = await supabase.auth.getSession();
+        // Let Supabase detectSessionInUrl process the ?code= first
+        await new Promise((r) => setTimeout(r, 50));
+
+        const maxAttempts = isOAuthCallback() ? 12 : 1;
+        for (let i = 0; i < maxAttempts; i++) {
+          const { data: { session }, error } = await supabase.auth.getSession();
           if (error) console.error('[auth] getSession:', error.message);
-          session = data.session;
-          if (session?.user) break;
-          if (isOAuthCallback() && i < attempts - 1) {
-            await new Promise((r) => setTimeout(r, 350));
+          if (session?.user) {
+            await handleSession(session.user);
+            window.clearTimeout(timeout);
+            return;
           }
+          if (!isOAuthCallback()) break;
+          await new Promise((r) => setTimeout(r, 300));
         }
 
-        if (mounted && session?.user) {
-          await handleSession(session.user, 'INITIAL_SESSION');
-        } else if (mounted && isOAuthCallback()) {
+        if (!mounted || sessionHandled.current) return;
+
+        if (isOAuthCallback()) {
           setAuthError('Google sign-in could not be completed. Please try again.');
-          sessionStorage.removeItem(OAUTH_PENDING_KEY);
-          setOauthCompleting(false);
-          setLoading(false);
-          window.clearTimeout(timeout);
-        } else if (mounted && oauthFlow && !isOAuthCallback()) {
-          sessionStorage.removeItem(OAUTH_PENDING_KEY);
-          finishLoading(true);
-        } else if (mounted && !oauthFlow) {
-          window.clearTimeout(timeout);
-          finishLoading(true);
         }
+        sessionStorage.removeItem(OAUTH_PENDING_KEY);
+        window.clearTimeout(timeout);
+        finishAuth();
       } catch (e) {
         console.error('[auth] init failed:', e);
-        if (mounted) {
-          setOauthCompleting(false);
-          setLoading(false);
-        }
+        sessionStorage.removeItem(OAUTH_PENDING_KEY);
+        window.clearTimeout(timeout);
+        finishAuth();
       }
     };
 
@@ -287,7 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'URL de redirection manquante. Configurez VITE_APP_URL et Supabase Site URL avec https://.' };
     }
 
-    const redirectTo = `${base.replace(/\/$/, '')}/#home`;
+    const redirectTo = `${base.replace(/\/$/, '')}/`;
     sessionStorage.setItem(OAUTH_PENDING_KEY, '1');
 
     const { error } = await getSupabase().auth.signInWithOAuth({
@@ -318,6 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     sessionStorage.removeItem(OAUTH_PENDING_KEY);
+    sessionHandled.current = false;
     if (isSupabaseConfigured) {
       await getSupabase().auth.signOut();
     }

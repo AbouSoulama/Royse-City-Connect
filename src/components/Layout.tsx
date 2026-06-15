@@ -17,7 +17,7 @@ interface PhoneShellProps {
   unreadCount: number;
   hideNav?: boolean;
   hideHeader?: boolean;
-  /** Full-bleed screens (welcome, auth) — no slate background, child fills area */
+  /** Full-bleed screens (welcome, auth, loading) */
   fillScreen?: boolean;
 }
 
@@ -28,22 +28,23 @@ export function PhoneShell({
   const [langOpen, setLangOpen] = useState(false);
 
   return (
-    <div className="fixed inset-0 w-full overflow-hidden bg-slate-200 bg-pattern flex items-stretch md:items-center justify-center md:p-6">
-      <div className="w-full h-full max-h-full md:w-[420px] md:h-[min(860px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] bg-white md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative overflow-hidden flex flex-col phone-glow">
+    <div className="app-viewport fixed inset-0 w-full overflow-hidden bg-white md:bg-slate-200 md:bg-pattern flex flex-col md:items-center md:justify-center md:p-6">
+      <div className="app-frame flex flex-col flex-1 min-h-0 w-full md:flex-none md:w-[420px] md:h-[min(860px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative overflow-hidden md:phone-glow">
         <div className="hidden md:flex absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl z-50 items-end justify-center pb-1">
           <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
           <div className="w-12 h-1.5 rounded-full bg-slate-700" />
         </div>
 
         {!hideHeader && (
-          <header className="shrink-0 bg-white border-b border-slate-100 px-3 pt-[max(1.25rem,env(safe-area-inset-top,0px))] md:pt-8 pb-2.5 flex items-center justify-between relative z-10 gap-2">
-            <button onClick={() => setPage('home')} className="flex items-center min-w-0 active:opacity-70">
-              <LogoHeader height={34} />
+          <header className="shrink-0 bg-white border-b border-slate-100 px-3 pt-3 pb-2.5 flex items-center justify-between relative z-10 gap-2">
+            <button type="button" onClick={() => setPage('home')} className="flex items-center min-w-0 active:opacity-70">
+              <LogoHeader height={32} />
             </button>
 
             <div className="flex items-center gap-0.5 shrink-0">
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => setLangOpen(!langOpen)}
                   className="flex items-center gap-0.5 px-2 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-navy text-xs font-bold"
                 >
@@ -54,11 +55,11 @@ export function PhoneShell({
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
                     <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 w-32 animate-fade-in">
-                      <button onClick={() => { setLang('en'); setLangOpen(false); }}
+                      <button type="button" onClick={() => { setLang('en'); setLangOpen(false); }}
                         className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${lang === 'en' ? 'text-navy font-semibold' : 'text-slate-700'}`}>
                         🇺🇸 English
                       </button>
-                      <button onClick={() => { setLang('fr'); setLangOpen(false); }}
+                      <button type="button" onClick={() => { setLang('fr'); setLangOpen(false); }}
                         className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${lang === 'fr' ? 'text-navy font-semibold' : 'text-slate-700'}`}>
                         🇫🇷 Français
                       </button>
@@ -67,7 +68,7 @@ export function PhoneShell({
                 )}
               </div>
 
-              <button onClick={onOpenNotifs} className="relative p-2 rounded-full hover:bg-slate-100 text-navy" aria-label={t('notifications')}>
+              <button type="button" onClick={onOpenNotifs} className="relative p-2 rounded-full hover:bg-slate-100 text-navy" aria-label={t('notifications')}>
                 <BellIcon size={20} />
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-crimson text-white text-[9px] font-bold flex items-center justify-center">
@@ -76,19 +77,23 @@ export function PhoneShell({
                 )}
               </button>
 
-              <button onClick={onOpenProfile} className="p-2 rounded-full hover:bg-slate-100 text-navy" aria-label={t('profile')}>
+              <button type="button" onClick={onOpenProfile} className="p-2 rounded-full hover:bg-slate-100 text-navy" aria-label={t('profile')}>
                 <UserIcon size={20} />
               </button>
             </div>
           </header>
         )}
 
-        <main className={`flex-1 min-h-0 ${fillScreen ? 'overflow-hidden relative' : 'overflow-y-auto phone-scroll bg-slate-50'}`}>
+        <main
+          className={`flex-1 min-h-0 flex flex-col ${
+            fillScreen ? 'overflow-hidden' : 'overflow-y-auto phone-scroll bg-slate-50'
+          }`}
+        >
           {children}
         </main>
 
         {!hideNav && (
-          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-1 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] grid grid-cols-5 gap-0.5">
+          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-1 pt-2 pb-2 grid grid-cols-5 gap-0.5">
             <NavBtn icon={<HomeIcon size={20} />} label={t('home')} active={page === 'home'} onClick={() => setPage('home')} />
             <NavBtn icon={<NewsIcon size={20} />} label={t('news')} active={page === 'news'} onClick={() => setPage('news')} />
             <NavBtn icon={<StoreIcon size={20} />} label={t('businesses')} active={page === 'businesses'} onClick={() => setPage('businesses')} />
@@ -104,6 +109,7 @@ export function PhoneShell({
 function NavBtn({ icon, label, active, onClick }: { icon: ReactNode; label: string; active: boolean; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`flex flex-col items-center gap-0.5 py-1 rounded-xl transition-all ${
         active ? 'text-crimson' : 'text-slate-400 hover:text-navy'
@@ -125,6 +131,18 @@ export function SectionHeader({ title, action }: { title: string; action?: React
   );
 }
 
+export function LoadingScreen({ message }: { message: string }) {
+  return (
+    <div
+      className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-white"
+      style={{ background: 'linear-gradient(180deg, #1E3A5F 0%, #15294A 100%)' }}
+    >
+      <div className="w-11 h-11 rounded-full border-[3px] border-white/30 border-t-white animate-spin" />
+      <p className="text-sm font-medium text-white/90 text-center">{message}</p>
+    </div>
+  );
+}
+
 export function ModalSheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   if (!open) return null;
   return (
@@ -133,11 +151,11 @@ export function ModalSheet({ open, onClose, title, children }: { open: boolean; 
       <div className="relative w-full bg-white rounded-t-3xl max-h-[85%] flex flex-col animate-slide-up">
         <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
           <h3 className="font-extrabold text-navy">{title}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500">
             <XIcon size={20} />
           </button>
         </div>
-        <div className="overflow-y-auto phone-scroll flex-1">{children}</div>
+        <div className="overflow-y-auto phone-scroll flex-1 min-h-0">{children}</div>
       </div>
     </div>
   );
