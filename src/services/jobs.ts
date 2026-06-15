@@ -2,6 +2,7 @@ import type { Job } from '../data';
 import { jobs as mockJobs } from '../data';
 import type { ContentStatus, DbJob, JobType } from '../types/database';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { isDemoMode } from '../lib/config';
 import { createNotification } from './notifications';
 
 function timeAgo(iso: string): string {
@@ -32,7 +33,7 @@ function toAppJob(row: DbJob): Job {
 
 export async function fetchApprovedJobs(): Promise<Job[]> {
   if (!isSupabaseConfigured) {
-    return mockJobs;
+    return isDemoMode() ? mockJobs : [];
   }
 
   const { data, error } = await getSupabase()
@@ -41,16 +42,17 @@ export async function fetchApprovedJobs(): Promise<Job[]> {
     .eq('status', 'approved')
     .order('created_at', { ascending: false });
 
-  if (error || !data?.length) {
-    return mockJobs;
+  if (error) {
+    console.error('[jobs] fetchApproved:', error.message);
+    return isDemoMode() ? mockJobs : [];
   }
 
-  return data.map(toAppJob);
+  return (data ?? []).map(toAppJob);
 }
 
 export async function fetchJobsForAdmin(): Promise<Job[]> {
   if (!isSupabaseConfigured) {
-    return mockJobs;
+    return isDemoMode() ? mockJobs : [];
   }
 
   const { data, error } = await getSupabase()
@@ -58,11 +60,12 @@ export async function fetchJobsForAdmin(): Promise<Job[]> {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error || !data) {
-    return mockJobs;
+  if (error) {
+    console.error('[jobs] fetchAdmin:', error.message);
+    return isDemoMode() ? mockJobs : [];
   }
 
-  return data.map(toAppJob);
+  return (data ?? []).map(toAppJob);
 }
 
 export async function createJob(input: {

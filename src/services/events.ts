@@ -2,6 +2,7 @@ import type { Event } from '../data';
 import { events as mockEvents } from '../data';
 import type { ContentStatus, DbEvent } from '../types/database';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { isDemoMode } from '../lib/config';
 import { createNotification } from './notifications';
 
 const eventMeta = [
@@ -33,7 +34,7 @@ function toAppEvent(row: DbEvent): Event {
 
 export async function fetchApprovedEvents(): Promise<Event[]> {
   if (!isSupabaseConfigured) {
-    return mockEvents;
+    return isDemoMode() ? mockEvents : [];
   }
 
   const { data, error } = await getSupabase()
@@ -42,11 +43,12 @@ export async function fetchApprovedEvents(): Promise<Event[]> {
     .eq('status', 'approved')
     .order('event_date', { ascending: true });
 
-  if (error || !data?.length) {
-    return mockEvents;
+  if (error) {
+    console.error('[events] fetchApproved:', error.message);
+    return isDemoMode() ? mockEvents : [];
   }
 
-  return data.map(toAppEvent);
+  return (data ?? []).map(toAppEvent);
 }
 
 export async function fetchUpcomingEvents(limit = 3): Promise<Event[]> {
@@ -56,7 +58,7 @@ export async function fetchUpcomingEvents(limit = 3): Promise<Event[]> {
 
 export async function fetchEventsForAdmin(): Promise<Event[]> {
   if (!isSupabaseConfigured) {
-    return mockEvents;
+    return isDemoMode() ? mockEvents : [];
   }
 
   const { data, error } = await getSupabase()
@@ -64,11 +66,12 @@ export async function fetchEventsForAdmin(): Promise<Event[]> {
     .select('*')
     .order('event_date', { ascending: true });
 
-  if (error || !data) {
-    return mockEvents;
+  if (error) {
+    console.error('[events] fetchAdmin:', error.message);
+    return isDemoMode() ? mockEvents : [];
   }
 
-  return data.map(toAppEvent);
+  return (data ?? []).map(toAppEvent);
 }
 
 export async function fetchUserRsvpIds(userId: string): Promise<string[]> {

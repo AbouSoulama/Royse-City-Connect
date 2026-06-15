@@ -1,5 +1,6 @@
 import { notifications as mockNotifications } from '../data';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { isDemoMode } from '../lib/config';
 import type { DbNotification } from '../types/database';
 
 export interface AppNotification {
@@ -34,7 +35,7 @@ function toAppNotification(row: DbNotification): AppNotification {
 
 export async function fetchNotifications(userId: string): Promise<AppNotification[]> {
   if (!isSupabaseConfigured) {
-    return mockNotifications;
+    return isDemoMode() ? mockNotifications : [];
   }
 
   const { data, error } = await getSupabase()
@@ -43,11 +44,12 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error || !data) {
-    return mockNotifications;
+  if (error) {
+    console.error('[notifications]', error.message);
+    return isDemoMode() ? mockNotifications : [];
   }
 
-  return data.map(toAppNotification);
+  return (data ?? []).map(toAppNotification);
 }
 
 export async function createNotification(input: {

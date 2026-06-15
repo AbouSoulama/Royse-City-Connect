@@ -3,40 +3,82 @@ import { useT } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { LogoFull } from '../components/Logo';
 import { ChevronLeft } from '../components/Icons';
+import { isAppleAuthEnabled } from '../lib/config';
 
 export type { AuthUser } from '../types/auth';
+
+type AuthView = 'signin' | 'signup' | 'forgot' | 'recovery';
 
 export function Auth({
   onSuccess,
   onBack,
   initialMode = 'signin',
+  recoveryMode = false,
 }: {
   onSuccess: () => void;
   onBack?: () => void;
   initialMode?: 'signin' | 'signup';
+  recoveryMode?: boolean;
 }) {
   const { t, lang, setLang } = useT();
-  const { signUp, signIn, signInWithGoogle, enterAsGuest, isConfigured } = useAuth();
-  const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
+  const { signUp, signIn, signInWithGoogle, resetPassword, updatePassword, enterAsGuest, isConfigured } = useAuth();
+  const [view, setView] = useState<AuthView>(recoveryMode ? 'recovery' : initialMode);
   const [role, setRole] = useState<'member' | 'business'>('member');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     phone: '',
     email: '',
     city: 'Royse City, TX',
     password: '',
+    newPassword: '',
+    confirmPassword: '',
   });
 
-  const submit = async () => {
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
 
     try {
-      if (!isConfigured) {
+      if (!isConfigured && view !== 'forgot') {
         setError('Backend not configured. Copy .env.example to .env and add your Supabase keys.');
+        return;
+      }
+
+      if (view === 'forgot') {
+        if (!form.email) {
+          setError('Email is required.');
+          return;
+        }
+        const result = await resetPassword(form.email);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        setInfo('Check your email for a password reset link.');
+        return;
+      }
+
+      if (view === 'recovery') {
+        if (form.newPassword.length < 8) {
+          setError('Password must be at least 8 characters.');
+          return;
+        }
+        if (form.newPassword !== form.confirmPassword) {
+          setError('Passwords do not match.');
+          return;
+        }
+        const result = await updatePassword(form.newPassword);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        onSuccess();
         return;
       }
 
@@ -45,8 +87,13 @@ export function Auth({
         return;
       }
 
+      if (view === 'signup' && form.password.length < 8) {
+        setError('Password must be at least 8 characters.');
+        return;
+      }
+
       const result =
-        mode === 'signin'
+        view === 'signin'
           ? await signIn(form.email, form.password)
           : await signUp({
               email: form.email,
@@ -81,18 +128,31 @@ export function Auth({
     onSuccess();
   };
 
+  const title =
+    view === 'forgot' ? t('forgotPassword') :
+    view === 'recovery' ? 'Set new password' :
+    view === 'signin' ? t('welcomeBack') : t('createAccount');
+
+  const subtitle =
+    view === 'forgot' ? 'Enter your email and we will send a reset link.' :
+    view === 'recovery' ? 'Choose a new password for your account.' :
+    view === 'signin' ? t('signInSubtitle') : t('signUpSubtitle');
+
   return (
     <div className="min-h-full bg-gradient-to-b from-navy via-navy-dark to-[#15294A] flex flex-col">
       <div className="relative px-5 pt-6 pb-16 text-center">
-        {onBack && (
+        {onBack && view !== 'recovery' && (
           <button
+            type="button"
             onClick={onBack}
             className="absolute top-6 left-5 p-2 rounded-full bg-white/15 text-white"
+            aria-label="Back"
           >
             <ChevronLeft size={20} />
           </button>
         )}
         <button
+          type="button"
           onClick={() => setLang(lang === 'en' ? 'fr' : 'en')}
           className="absolute top-6 right-5 flex items-center gap-1 text-xs font-bold text-white bg-white/10 px-3 py-1.5 rounded-full"
         >
@@ -106,63 +166,108 @@ export function Auth({
       </div>
 
       <div className="flex-1 bg-white rounded-t-[2rem] -mt-6 px-6 pt-8 pb-8 shadow-2xl animate-slide-up overflow-y-auto phone-scroll">
-        <h2 className="text-2xl font-extrabold text-navy">
-          {mode === 'signin' ? t('welcomeBack') : t('createAccount')}
-        </h2>
-        <p className="text-slate-500 text-sm mt-1">
-          {mode === 'signin' ? t('signInSubtitle') : t('signUpSubtitle')}
-        </p>
+        <h2 className="text-2xl font-extrabold text-navy">{title}</h2>
+        <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
 
-        {!isConfigured && (
+        {!isConfigured && view !== 'forgot' && (
           <div className="mt-3 text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-xl px-3 py-2">
             Supabase not configured — guest mode still works.
           </div>
         )}
 
-        <div className="mt-5 space-y-3">
-          <SocialBtn
-            icon={<GoogleIcon />}
-            label={t('continueGoogle')}
-            onClick={handleGoogle}
-            disabled={oauthLoading || !isConfigured}
-          />
-          <SocialBtn
-            icon={<AppleIcon />}
-            label={t('continueApple')}
-            dark
-            onClick={() => setError(t('appleComingSoon'))}
-          />
-        </div>
+        {view !== 'forgot' && view !== 'recovery' && (
+          <>
+            <div className="mt-5 space-y-3">
+              <SocialBtn
+                icon={<GoogleIcon />}
+                label={t('continueGoogle')}
+                onClick={handleGoogle}
+                disabled={oauthLoading || !isConfigured}
+              />
+              {isAppleAuthEnabled() && (
+                <SocialBtn icon={<AppleIcon />} label={t('continueApple')} dark onClick={() => setError('Apple sign-in is not configured.')} />
+              )}
+            </div>
 
-        <div className="flex items-center my-5 gap-3">
-          <div className="flex-1 h-px bg-slate-200" />
-          <span className="text-[10px] text-slate-400 font-bold uppercase">OR</span>
-          <div className="flex-1 h-px bg-slate-200" />
-        </div>
+            <div className="flex items-center my-5 gap-3">
+              <div className="flex-1 h-px bg-slate-200" />
+              <span className="text-[10px] text-slate-400 font-bold uppercase">OR</span>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+          </>
+        )}
 
-        <div className="space-y-3">
-          {mode === 'signup' && (
-            <AuthField label={t('fullName')} value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder="Aminata Diallo" />
+        <form onSubmit={submit} className="space-y-3">
+          {view === 'signup' && (
+            <AuthField
+              label={t('fullName')}
+              name="name"
+              autoComplete="name"
+              value={form.name}
+              onChange={(v) => setForm({ ...form, name: v })}
+              placeholder="Aminata Diallo"
+            />
           )}
-          <AuthField
-            label={mode === 'signin' ? t('emailOrPhone') : t('email')}
-            value={form.email}
-            onChange={(v) => setForm({ ...form, email: v })}
-            type="email"
-            placeholder="admin@rcc.com"
-          />
-          {mode === 'signup' && (
-            <AuthField label={t('city')} value={form.city} onChange={(v) => setForm({ ...form, city: v })} placeholder="Royse City, TX" />
+          {(view === 'signin' || view === 'signup' || view === 'forgot') && (
+            <AuthField
+              label={t('email')}
+              name="email"
+              autoComplete="email"
+              value={form.email}
+              onChange={(v) => setForm({ ...form, email: v })}
+              type="email"
+              placeholder="you@example.com"
+            />
           )}
-          <AuthField
-            label={t('password')}
-            value={form.password}
-            onChange={(v) => setForm({ ...form, password: v })}
-            type="password"
-            placeholder="••••••••"
-          />
+          {view === 'signup' && (
+            <>
+              <AuthField
+                label={t('phone')}
+                name="phone"
+                autoComplete="tel"
+                value={form.phone}
+                onChange={(v) => setForm({ ...form, phone: v })}
+                type="tel"
+                placeholder="+1 469 555 0100"
+              />
+              <AuthField label={t('city')} name="city" autoComplete="address-level2" value={form.city} onChange={(v) => setForm({ ...form, city: v })} placeholder="Royse City, TX" />
+            </>
+          )}
+          {(view === 'signin' || view === 'signup') && (
+            <AuthField
+              label={t('password')}
+              name="password"
+              autoComplete={view === 'signup' ? 'new-password' : 'current-password'}
+              value={form.password}
+              onChange={(v) => setForm({ ...form, password: v })}
+              type="password"
+              placeholder="••••••••"
+            />
+          )}
+          {view === 'recovery' && (
+            <>
+              <AuthField
+                label="New password"
+                name="new-password"
+                autoComplete="new-password"
+                value={form.newPassword}
+                onChange={(v) => setForm({ ...form, newPassword: v })}
+                type="password"
+                placeholder="••••••••"
+              />
+              <AuthField
+                label="Confirm password"
+                name="confirm-password"
+                autoComplete="new-password"
+                value={form.confirmPassword}
+                onChange={(v) => setForm({ ...form, confirmPassword: v })}
+                type="password"
+                placeholder="••••••••"
+              />
+            </>
+          )}
 
-          {mode === 'signup' && (
+          {view === 'signup' && (
             <div>
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">{t('selectRole')}</div>
               <div className="grid grid-cols-2 gap-2">
@@ -171,55 +276,91 @@ export function Auth({
               </div>
             </div>
           )}
-        </div>
 
-        {mode === 'signin' && (
-          <button className="text-xs font-semibold text-crimson mt-3 block ml-auto">{t('forgotPassword')}</button>
-        )}
+          {view === 'signin' && (
+            <button
+              type="button"
+              onClick={() => { setView('forgot'); setError(null); setInfo(null); }}
+              className="text-xs font-semibold text-crimson mt-1 block ml-auto"
+            >
+              {t('forgotPassword')}
+            </button>
+          )}
 
-        {error && (
-          <div className="mt-3 text-xs bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="mt-3 text-xs bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2" role="alert">
+              {error}
+            </div>
+          )}
+          {info && (
+            <div className="mt-3 text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl px-3 py-2">
+              {info}
+            </div>
+          )}
 
-        <button
-          onClick={submit}
-          disabled={loading}
-          className="w-full mt-5 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-[0.98] transition"
-        >
-          {loading ? '…' : mode === 'signin' ? t('signIn') : t('signUp')}
-        </button>
-
-        <p className="text-center text-xs text-slate-500 mt-4">
-          {mode === 'signin' ? t('noAccount') : t('haveAccount')}{' '}
           <button
-            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); }}
-            className="text-crimson font-bold"
+            type="submit"
+            disabled={loading}
+            className="w-full mt-5 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-[0.98] transition"
           >
-            {mode === 'signin' ? t('signUp') : t('signIn')}
+            {loading ? '…' :
+              view === 'forgot' ? 'Send reset link' :
+              view === 'recovery' ? 'Update password' :
+              view === 'signin' ? t('signIn') : t('signUp')}
           </button>
-        </p>
+        </form>
 
-        <button
-          onClick={handleGuest}
-          className="w-full mt-4 text-slate-500 text-sm font-medium py-2"
-        >
-          {t('continueAsGuest')} →
-        </button>
+        {view === 'forgot' && (
+          <button type="button" onClick={() => setView('signin')} className="w-full mt-4 text-crimson text-sm font-bold">
+            ← Back to sign in
+          </button>
+        )}
+
+        {(view === 'signin' || view === 'signup') && (
+          <p className="text-center text-xs text-slate-500 mt-4">
+            {view === 'signin' ? t('noAccount') : t('haveAccount')}{' '}
+            <button
+              type="button"
+              onClick={() => { setView(view === 'signin' ? 'signup' : 'signin'); setError(null); }}
+              className="text-crimson font-bold"
+            >
+              {view === 'signin' ? t('signUp') : t('signIn')}
+            </button>
+          </p>
+        )}
+
+        {(view === 'signin' || view === 'signup') && (
+          <button
+            type="button"
+            onClick={handleGuest}
+            className="w-full mt-4 text-slate-500 text-sm font-medium py-2"
+          >
+            {t('continueAsGuest')} →
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 function AuthField({
-  label, value, onChange, type = 'text', placeholder,
-}: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+  label, name, value, onChange, type = 'text', placeholder, autoComplete,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  autoComplete?: string;
+}) {
   return (
     <label className="block">
       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{label}</span>
       <input
         type={type}
+        name={name}
+        autoComplete={autoComplete}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
@@ -234,6 +375,7 @@ function SocialBtn({
 }: { icon: React.ReactNode; label: string; onClick: () => void; dark?: boolean; disabled?: boolean }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className={`w-full flex items-center justify-center gap-3 py-3 rounded-xl font-semibold text-sm border transition active:scale-[0.98] disabled:opacity-50 ${
@@ -270,6 +412,7 @@ function AppleIcon() {
 function RoleBtn({ label, emoji, active, onClick }: { label: string; emoji: string; active: boolean; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition ${
         active ? 'border-crimson bg-crimson/5' : 'border-slate-200 bg-white'

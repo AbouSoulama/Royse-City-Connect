@@ -4,9 +4,9 @@ import { AuthUser } from '../types/auth';
 import { ImageUpload } from '../components/ImageUpload';
 import { ModalSheet } from '../components/Layout';
 import { fetchUserStats, updateProfile } from '../services/profile';
-import { getSavedPostIds, savedCount } from '../utils/saved';
+import { fetchSavedItemIds, savedCount } from '../services/savedItems';
 import { getProfileSettings, saveProfileSettings, ProfileSettings } from '../utils/profileSettings';
-import { fetchApprovedPosts } from '../services/posts';
+import { fetchCommunityFeed } from '../services/posts';
 import { Post } from '../data';
 import { PostDetailSheet } from '../components/Posts';
 import { FeedbackSheet } from '../components/FeedbackSheet';
@@ -38,6 +38,7 @@ export function Profile({
   const [panel, setPanel] = useState<Panel>(null);
   const [tab, setTab] = useState<ProfileTab>('about');
   const [savedPosts, setSavedPosts] = useState<Post[]>([]);
+  const [savedTotal, setSavedTotal] = useState(0);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [settings, setSettings] = useState<ProfileSettings>(getProfileSettings);
   const [stats, setStats] = useState({ posts: 0, events: 0 });
@@ -61,11 +62,21 @@ export function Profile({
   }, [user.id, user.guest]);
 
   useEffect(() => {
+    savedCount(user.guest ? undefined : user.id).then(setSavedTotal);
+  }, [user.id, user.guest, panel, tab]);
+
+  useEffect(() => {
     if (panel === 'saved' || tab === 'saved') {
-      const ids = getSavedPostIds();
-      fetchApprovedPosts().then((all) => setSavedPosts(all.filter((p) => ids.includes(p.id))));
+      fetchSavedItemIds(user.guest ? undefined : user.id).then(async (items) => {
+        const feed = await fetchCommunityFeed();
+        const ids = new Set(items.map((i) => i.id));
+        setSavedPosts(feed.filter((p) => {
+          const rawId = p.sourceId ?? p.id;
+          return ids.has(rawId) || ids.has(p.id);
+        }));
+      });
     }
-  }, [panel, tab]);
+  }, [panel, tab, user.id, user.guest]);
 
   useEffect(() => {
     setAvatarUrl(user.avatarUrl);
@@ -148,7 +159,7 @@ export function Profile({
         <div className="bg-white rounded-2xl shadow-md border border-slate-100 grid grid-cols-4 divide-x divide-slate-100">
           <TabBtn label={t('posts')} value={String(stats.posts)} active={tab === 'posts'} onClick={() => setTab('posts')} />
           <TabBtn label={t('eventsLabel')} value={String(stats.events)} active={tab === 'events'} onClick={() => setTab('events')} />
-          <TabBtn label="Saved" value={String(savedCount())} active={tab === 'saved'} onClick={() => setTab('saved')} />
+          <TabBtn label="Saved" value={String(savedTotal)} active={tab === 'saved'} onClick={() => setTab('saved')} />
           <TabBtn label={t('about')} value="ℹ️" active={tab === 'about'} onClick={() => setTab('about')} />
         </div>
       </div>
@@ -220,7 +231,7 @@ export function Profile({
 
       <div className="text-[10px] font-bold text-slate-400 uppercase px-5 mt-5 mb-2">{t('myActivity')}</div>
       <div className="bg-white border-y border-slate-100">
-        <Item icon={<BookmarkIcon size={18} />} label={t('mySavedItems')} value={String(savedCount())} onClick={() => setTab('saved')} />
+        <Item icon={<BookmarkIcon size={18} />} label={t('mySavedItems')} value={String(savedTotal)} onClick={() => setTab('saved')} />
         {user.role === 'business' && (
           <Item icon={<StoreIcon size={18} />} label={t('myBusinesses')} value="—" onClick={() => {}} />
         )}

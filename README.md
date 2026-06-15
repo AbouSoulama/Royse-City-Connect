@@ -39,7 +39,7 @@ Mobile-first community web app for the African diaspora in Texas (Royse City, Da
 | Frontend | React 19, TypeScript, Vite 7 |
 | Styling | Tailwind CSS 4 |
 | Backend | [Supabase](https://supabase.com) (Auth, PostgreSQL, Storage, Realtime) |
-| Build | Single-file HTML output (`vite-plugin-singlefile`) |
+| Build | Vite 7 + PWA (service worker) |
 
 ---
 
@@ -88,6 +88,20 @@ Run the SQL files **in order** in **Supabase → SQL Editor**:
 | 7 | `supabase/migrations/007_oauth_profile.sql` | Google/OAuth profile trigger |
 | 8 | `supabase/migrations/008_events_rls_fix.sql` | Events RLS fix |
 | 9 | `supabase/migrations/009_post_categories.sql` | Hospitality & real estate categories |
+| 10 | `supabase/migrations/010_production_security.sql` | Profile privacy, saved_items, reactions, reports, RLS |
+
+### Production environment
+
+```env
+VITE_DEMO_MODE=false
+VITE_APPLE_AUTH_ENABLED=false
+VITE_SUPPORT_EMAIL=support@example.com
+VITE_SUPPORT_PHONE=+1 (469) 555-0100
+```
+
+With `VITE_DEMO_MODE=false`, the app never shows mock/fallback data — empty states are shown instead.
+
+E2E test credentials (never commit): create `.env.test.local` with `TEST_ADMIN_EMAIL`, `TEST_ADMIN_PASSWORD`, `TEST_USER_EMAIL`, `TEST_USER_PASSWORD`.
 
 ### 4. Seed data (optional)
 
@@ -118,7 +132,17 @@ npm run build
 npm run preview
 ```
 
-Output: `dist/index.html` (single bundled file)
+Output: `dist/` (HTML, assets, service worker, manifest)
+
+Deploy to Vercel:
+
+```bash
+npm run build
+# push to GitHub — Vercel builds automatically, or:
+npx vercel --prod
+```
+
+Ensure Supabase redirect URLs include `/recovery` for password reset.
 
 ---
 
@@ -157,7 +181,7 @@ src/
 └── types/                  # TypeScript types
 
 supabase/
-├── migrations/             # SQL schema (001–009)
+├── migrations/             # SQL schema (001–010)
 └── seed*.sql               # Demo data
 ```
 
@@ -180,6 +204,8 @@ supabase/
 | `npm run dev` | Start dev server (port 5174, network enabled) |
 | `npm run build` | Production build → `dist/` |
 | `npm run preview` | Preview production build |
+| `npm run lint` | TypeScript check |
+| `npm run test` | Unit tests (Vitest) |
 
 ---
 

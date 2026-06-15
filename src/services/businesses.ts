@@ -2,6 +2,7 @@ import type { Business } from '../data';
 import { businesses as mockBusinesses } from '../data';
 import type { ContentStatus, DbBusiness } from '../types/database';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { isDemoMode } from '../lib/config';
 import { createNotification } from './notifications';
 
 const categoryMeta: Record<string, { emoji: string; color: string }> = {
@@ -39,7 +40,9 @@ function toAppBusiness(row: DbBusiness): Business {
 
 export async function fetchApprovedBusinesses(): Promise<Business[]> {
   if (!isSupabaseConfigured) {
-    return mockBusinesses.filter((b) => b.status !== 'pending' && b.status !== 'rejected');
+    return isDemoMode()
+      ? mockBusinesses.filter((b) => b.status !== 'pending' && b.status !== 'rejected')
+      : [];
   }
 
   const { data, error } = await getSupabase()
@@ -49,11 +52,14 @@ export async function fetchApprovedBusinesses(): Promise<Business[]> {
     .order('featured', { ascending: false })
     .order('created_at', { ascending: false });
 
-  if (error || !data?.length) {
-    return mockBusinesses.filter((b) => !b.status || b.status === 'approved');
+  if (error) {
+    console.error('[businesses] fetchApproved:', error.message);
+    return isDemoMode()
+      ? mockBusinesses.filter((b) => !b.status || b.status === 'approved')
+      : [];
   }
 
-  return data.map(toAppBusiness);
+  return (data ?? []).map(toAppBusiness);
 }
 
 export async function fetchFeaturedBusinesses(): Promise<Business[]> {
@@ -63,7 +69,7 @@ export async function fetchFeaturedBusinesses(): Promise<Business[]> {
 
 export async function fetchBusinessesForAdmin(): Promise<Business[]> {
   if (!isSupabaseConfigured) {
-    return mockBusinesses;
+    return isDemoMode() ? mockBusinesses : [];
   }
 
   const { data, error } = await getSupabase()
@@ -71,11 +77,12 @@ export async function fetchBusinessesForAdmin(): Promise<Business[]> {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error || !data) {
-    return mockBusinesses;
+  if (error) {
+    console.error('[businesses] fetchAdmin:', error.message);
+    return isDemoMode() ? mockBusinesses : [];
   }
 
-  return data.map(toAppBusiness);
+  return (data ?? []).map(toAppBusiness);
 }
 
 export async function createBusiness(input: {

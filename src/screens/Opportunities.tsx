@@ -16,7 +16,7 @@ const typeColors: Record<Job['type'], string> = {
 };
 
 export function Opportunities({ user }: { user: AuthUser }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -77,6 +77,16 @@ export function Opportunities({ user }: { user: AuthUser }) {
 
       <div className="p-4 space-y-3">
         {loading && <div className="text-center text-sm text-slate-400 py-8">Loading jobs…</div>}
+        {!loading && filtered.length === 0 && (
+          <div className="text-center py-12 px-4">
+            <div className="text-4xl mb-3">💼</div>
+            <p className="text-sm text-slate-600 font-medium">
+              {lang === 'fr'
+                ? 'Aucune opportunité disponible pour le moment.'
+                : 'No opportunities available at the moment.'}
+            </p>
+          </div>
+        )}
         {!loading && filtered.map((j) => (
           <button
             key={j.id}

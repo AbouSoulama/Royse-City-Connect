@@ -14,23 +14,56 @@ import { Profile } from './screens/Profile';
 import { NotificationsList } from './screens/Notifications';
 import { AdminDashboard } from './screens/Admin';
 import { FeedbackSheet } from './components/FeedbackSheet';
+import { touchLastSeen } from './services/admin';
+
+const LANG_KEY = 'rc_lang';
+
+function readLang(): Lang {
+  try {
+    const stored = localStorage.getItem(LANG_KEY);
+    if (stored === 'en' || stored === 'fr') return stored;
+  } catch {
+    // ignore
+  }
+  return 'en';
+}
 
 type Stage = 'welcome' | 'onboarding' | 'auth' | 'app';
 
 function AppContent() {
   const { user, loading, signOut, refreshProfile } = useAuth();
   const { notifications, unreadCount, markAllRead } = useNotifications(user?.id, user?.guest);
-  const [lang, setLang] = useState<Lang>('en');
+  const [lang, setLangState] = useState<Lang>(readLang);
   const [stage, setStage] = useState<Stage>('welcome');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [page, setPage] = useState<Page>('home');
+  const [page, setPageState] = useState<Page>('home');
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [recoveryMode] = useState(() => window.location.pathname === '/recovery' || window.location.hash.includes('type=recovery'));
+
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem(LANG_KEY, l);
+    document.documentElement.lang = l;
+  };
+
+  const setPage = (p: Page) => {
+    setProfileOpen(false);
+    setAdminOpen(false);
+    setPageState(p);
+  };
 
   useEffect(() => {
-    if (!loading && user && !user.guest) setStage('app');
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  useEffect(() => {
+    if (!loading && user && !user.guest) {
+      setStage('app');
+      touchLastSeen();
+    }
   }, [loading, user]);
 
   const ctx = useMemo(
@@ -43,6 +76,23 @@ function AppContent() {
       <LangContext.Provider value={ctx}>
         <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav>
           <div className="flex items-center justify-center min-h-full text-slate-400 text-sm">Loading…</div>
+        </PhoneShell>
+      </LangContext.Provider>
+    );
+  }
+
+  if (recoveryMode && !user?.guest) {
+    return (
+      <LangContext.Provider value={ctx}>
+        <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav>
+          <Auth
+            recoveryMode
+            onSuccess={() => {
+              window.history.replaceState({}, '', '/');
+              setStage('app');
+              setPage('home');
+            }}
+          />
         </PhoneShell>
       </LangContext.Provider>
     );
@@ -95,7 +145,7 @@ function AppContent() {
           onOpenProfile={() => setProfileOpen(true)}
           unreadCount={unreadCount}
         >
-          {adminOpen ? (
+          {adminOpen && user.role === 'admin' ? (
             <AdminDashboard onBack={() => setAdminOpen(false)} />
           ) : profileOpen ? (
             <Profile
@@ -106,7 +156,12 @@ function AppContent() {
                 setProfileOpen(false);
                 setStage('welcome');
               }}
-              onOpenAdmin={() => { setProfileOpen(false); setAdminOpen(true); }}
+              onOpenAdmin={() => {
+                if (user.role === 'admin') {
+                  setProfileOpen(false);
+                  setAdminOpen(true);
+                }
+              }}
               onOpenNotifs={() => { setProfileOpen(false); setNotifOpen(true); }}
               onOpenFeedback={() => { setProfileOpen(false); setFeedbackOpen(true); }}
               onProfileUpdated={refreshProfile}

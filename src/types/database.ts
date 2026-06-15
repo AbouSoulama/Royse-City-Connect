@@ -13,6 +13,10 @@ export interface Profile {
   role: UserRole;
   avatar_url: string | null;
   bio: string | null;
+  show_phone?: boolean;
+  show_email?: boolean;
+  push_notifications?: boolean;
+  last_seen_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -119,6 +123,34 @@ export interface DbAppFeedback {
   created_at: string;
 }
 
+export interface DbSavedItem {
+  id: string;
+  user_id: string;
+  item_id: string;
+  item_type: string;
+  created_at: string;
+}
+
+export interface DbReaction {
+  id: string;
+  user_id: string;
+  item_id: string;
+  item_type: string;
+  reaction_type: string;
+  created_at: string;
+}
+
+export interface DbReport {
+  id: string;
+  reporter_id: string | null;
+  item_id: string;
+  item_type: string;
+  reason: string;
+  message: string | null;
+  status: string;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -170,6 +202,21 @@ export interface Database {
         Row: DbAppFeedback;
         Insert: Omit<DbAppFeedback, 'id' | 'created_at'> & { id?: string };
         Update: Partial<DbAppFeedback>;
+      };
+      saved_items: {
+        Row: DbSavedItem;
+        Insert: Omit<DbSavedItem, 'id' | 'created_at'> & { id?: string };
+        Update: Partial<DbSavedItem>;
+      };
+      reactions: {
+        Row: DbReaction;
+        Insert: Omit<DbReaction, 'id' | 'created_at'> & { id?: string };
+        Update: Partial<DbReaction>;
+      };
+      reports: {
+        Row: DbReport;
+        Insert: Omit<DbReport, 'id' | 'created_at'> & { id?: string };
+        Update: Partial<DbReport>;
       };
     };
     Enums: {

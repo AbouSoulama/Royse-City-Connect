@@ -6,10 +6,14 @@ import { fetchEventsForAdmin, toggleEventFeatured, updateEventStatus } from '../
 import { deleteJob, fetchJobsForAdmin, updateJobStatus } from '../services/jobs';
 import { fetchPostsForAdmin, togglePostPin, updatePostStatus } from '../services/posts';
 import { fetchFeedbackForAdmin } from '../services/feedback';
+import { fetchAdminStats, fetchAdminUsers } from '../services/admin';
+import { fetchReportsForAdmin, updateReportStatus } from '../services/reports';
 import type { AppFeedback } from '../services/feedback';
+import type { ContentReport } from '../services/reports';
+import type { AdminUser } from '../services/admin';
 import { ChevronLeft, CheckCircle, XIcon, PinIcon, ShieldIcon, StarIcon } from '../components/Icons';
 
-type Tab = 'overview' | 'posts' | 'businesses' | 'events' | 'jobs' | 'users';
+type Tab = 'overview' | 'posts' | 'businesses' | 'events' | 'jobs' | 'users' | 'reports';
 
 export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const { t } = useT();
@@ -32,7 +36,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
 
       <div className="px-3 -mt-5 relative z-20 mb-3">
         <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-1.5 flex gap-1 overflow-x-auto phone-scroll">
-          {(['overview', 'posts', 'businesses', 'events', 'jobs', 'users'] as Tab[]).map((tb) => (
+          {(['overview', 'posts', 'businesses', 'events', 'jobs', 'users', 'reports'] as Tab[]).map((tb) => (
             <button
               key={tb}
               onClick={() => setTab(tb)}
@@ -53,6 +57,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
         {tab === 'events' && <EventsModeration />}
         {tab === 'jobs' && <JobsModeration />}
         {tab === 'users' && <UsersAdmin />}
+        {tab === 'reports' && <ReportsAdmin />}
       </div>
     </div>
   );
@@ -60,50 +65,44 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
 
 function Overview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const { t } = useT();
-  const [stats, setStats] = useState({ posts: 0, businesses: 0, events: 0, jobs: 0, pendingBiz: 0 });
+  const [adminStats, setAdminStats] = useState({
+    totalUsers: 0,
+    activeUsers7d: null as number | null,
+    pendingReports: 0,
+    totalBusinesses: 0,
+    totalEvents: 0,
+    pendingPosts: 0,
+    pendingBusinesses: 0,
+    pendingJobs: 0,
+  });
   const [feedback, setFeedback] = useState<AppFeedback[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      fetchPostsForAdmin(),
-      fetchBusinessesForAdmin(),
-      fetchEventsForAdmin(),
-      fetchJobsForAdmin(),
-    ]).then(([posts, businesses, events, jobs]) => {
-      setStats({
-        posts: posts.filter((p) => p.status === 'pending').length,
-        businesses: businesses.length,
-        events: events.length,
-        jobs: jobs.filter((j) => j.status === 'pending').length,
-        pendingBiz: businesses.filter((b) => b.status === 'pending').length,
-      });
-    });
+    fetchAdminStats().then(setAdminStats);
     fetchFeedbackForAdmin().then(setFeedback);
   }, []);
 
-  const activities: { emoji: string; text: string; time: string; tab: Tab }[] = [
-    { emoji: '✅', text: "Approved post: 'Sunday service - CCF Dallas'", time: '10 min ago', tab: 'posts' },
-    { emoji: '📌', text: "Pinned: 'Severe weather alert'", time: '2h ago', tab: 'posts' },
-    { emoji: '✓', text: 'Verified business: Mama Africa Market', time: '1d ago', tab: 'businesses' },
-    { emoji: '🚫', text: 'Review user reports', time: '2d ago', tab: 'users' },
-  ];
+  const activeLabel =
+    adminStats.activeUsers7d === null
+      ? 'N/A'
+      : `${adminStats.activeUsers7d} (${adminStats.totalUsers ? Math.round((adminStats.activeUsers7d / adminStats.totalUsers) * 100) : 0}%)`;
 
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label={t('totalUsers')} value="247" change="+18 this week" color="from-navy to-navy-light" emoji="👥" onClick={() => onNavigate('users')} />
-        <StatCard label={t('activeUsers')} value="184" change="74% engagement" color="from-emerald-600 to-teal-700" emoji="📈" onClick={() => onNavigate('users')} />
-        <StatCard label={t('businesses')} value={String(stats.businesses)} change={`${stats.pendingBiz} pending`} color="from-crimson to-crimson-dark" emoji="🏪" onClick={() => onNavigate('businesses')} />
-        <StatCard label={t('events')} value={String(stats.events)} change="Manage events" color="from-amber-500 to-orange-600" emoji="📅" onClick={() => onNavigate('events')} />
+        <StatCard label={t('totalUsers')} value={String(adminStats.totalUsers)} change="Registered profiles" color="from-navy to-navy-light" emoji="👥" onClick={() => onNavigate('users')} />
+        <StatCard label={t('activeUsers')} value={adminStats.activeUsers7d === null ? 'N/A' : String(adminStats.activeUsers7d)} change={activeLabel} color="from-emerald-600 to-teal-700" emoji="📈" onClick={() => onNavigate('users')} />
+        <StatCard label={t('businesses')} value={String(adminStats.totalBusinesses)} change={`${adminStats.pendingBusinesses} pending`} color="from-crimson to-crimson-dark" emoji="🏪" onClick={() => onNavigate('businesses')} />
+        <StatCard label={t('events')} value={String(adminStats.totalEvents)} change="Approved events" color="from-amber-500 to-orange-600" emoji="📅" onClick={() => onNavigate('events')} />
       </div>
 
       <div className="mt-5 bg-white rounded-2xl border border-slate-100 p-4">
         <h3 className="font-extrabold text-navy mb-3">Pending review</h3>
         <div className="space-y-2">
-          <PendingRow emoji="📝" label={`${stats.posts} posts pending`} count={stats.posts} onClick={() => onNavigate('posts')} />
-          <PendingRow emoji="🏪" label={`${stats.pendingBiz} business verifications`} count={stats.pendingBiz} onClick={() => onNavigate('businesses')} />
-          <PendingRow emoji="💼" label={`${stats.jobs} job posts pending`} count={stats.jobs} onClick={() => onNavigate('jobs')} />
-          <PendingRow emoji="🚩" label="3 user reports" count={3} onClick={() => onNavigate('users')} />
+          <PendingRow emoji="📝" label={`${adminStats.pendingPosts} posts pending`} count={adminStats.pendingPosts} onClick={() => onNavigate('posts')} />
+          <PendingRow emoji="🏪" label={`${adminStats.pendingBusinesses} business verifications`} count={adminStats.pendingBusinesses} onClick={() => onNavigate('businesses')} />
+          <PendingRow emoji="💼" label={`${adminStats.pendingJobs} job posts pending`} count={adminStats.pendingJobs} onClick={() => onNavigate('jobs')} />
+          <PendingRow emoji="🚩" label={`${adminStats.pendingReports} content reports`} count={adminStats.pendingReports} onClick={() => onNavigate('reports')} />
         </div>
       </div>
 
@@ -120,15 +119,6 @@ function Overview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
               <p className="text-xs text-slate-600 mt-1 line-clamp-2">{f.message}</p>
               <div className="text-[10px] text-slate-400 mt-1 capitalize">{f.category}</div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4 bg-white rounded-2xl border border-slate-100 p-4">
-        <h3 className="font-extrabold text-navy mb-3">Recent activity</h3>
-        <div className="space-y-2">
-          {activities.map((a, i) => (
-            <Activity key={i} emoji={a.emoji} text={a.text} time={a.time} onClick={() => onNavigate(a.tab)} />
           ))}
         </div>
       </div>
@@ -437,20 +427,25 @@ function JobsModeration() {
 
 function UsersAdmin() {
   const { t } = useT();
-  const users = [
-    { name: 'Amina Bello', role: 'member', city: 'Royse City', email: 'amina@example.com' },
-    { name: 'Sarah Eyong', role: 'business', city: 'Rockwall', email: 'sarah@mamamarket.com' },
-    { name: 'Jean-Paul Mbarga', role: 'business', city: 'Royse City', email: 'jp@autorepair.com' },
-    { name: 'Kwame Asante', role: 'admin', city: 'Royse City', email: 'kwame@rcconnect.app' },
-    { name: 'Marie Ngono', role: 'business', city: 'Dallas', email: 'marie@cheztantine.com' },
-    { name: 'Fatou Sow', role: 'member', city: 'Dallas', email: 'fatou@example.com' },
-  ];
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAdminUsers().then((data) => {
+      setUsers(data);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <div className="text-center text-xs text-slate-400 py-8">Loading users…</div>;
+
   return (
     <Section title={`${t('users')} (${users.length})`}>
-      {users.map((u, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-slate-100 p-3 flex items-center gap-3">
+      {users.length === 0 && <Empty msg="No users found" />}
+      {users.map((u) => (
+        <div key={u.id} className="bg-white rounded-2xl border border-slate-100 p-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-navy to-navy-light text-white flex items-center justify-center font-bold text-sm shrink-0">
-            {u.name.split(' ').map((n) => n[0]).join('')}
+            {u.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1">
@@ -458,12 +453,71 @@ function UsersAdmin() {
               {u.role === 'admin' && <span className="text-[9px] bg-crimson text-white font-bold px-1.5 py-0.5 rounded">ADMIN</span>}
               {u.role === 'business' && <span className="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">BIZ</span>}
             </div>
-            <div className="text-[10px] text-slate-500 truncate">{u.email} • {u.city}</div>
+            <div className="text-[10px] text-slate-500 truncate">{u.phone || '—'} • {u.city}</div>
+            {u.lastSeenAt && (
+              <div className="text-[10px] text-slate-400">Last seen {new Date(u.lastSeenAt).toLocaleDateString()}</div>
+            )}
           </div>
-          <Btn color="red" small>{t('suspend')}</Btn>
         </div>
       ))}
     </Section>
+  );
+}
+
+function ReportsAdmin() {
+  const { t } = useT();
+  const [reports, setReports] = useState<ContentReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState<string | null>(null);
+
+  const load = () => {
+    setLoading(true);
+    fetchReportsForAdmin().then((data) => {
+      setReports(data);
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const handleStatus = async (id: string, status: 'reviewed' | 'dismissed') => {
+    setActionId(id);
+    const { error } = await updateReportStatus(id, status);
+    if (!error) load();
+    setActionId(null);
+  };
+
+  if (loading) return <div className="text-center text-xs text-slate-400 py-8">Loading reports…</div>;
+
+  const pending = reports.filter((r) => r.status === 'pending');
+
+  return (
+    <div className="space-y-4">
+      <Section title={`Reports (${pending.length} pending)`}>
+        {pending.length === 0 && <Empty msg="No pending reports" />}
+        {reports.map((r) => (
+          <div key={r.id} className={`bg-white rounded-2xl border p-3 ${r.status === 'pending' ? 'border-amber-200' : 'border-slate-100'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🚩</span>
+              <h4 className="font-bold text-navy text-sm flex-1 capitalize">{r.reason}</h4>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${r.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                {r.status}
+              </span>
+            </div>
+            <p className="text-xs text-slate-600">{r.message || 'No additional message'}</p>
+            <div className="text-[10px] text-slate-400 mt-1">{r.itemType} • {r.itemId.slice(0, 8)}… • {new Date(r.createdAt).toLocaleString()}</div>
+            {r.status === 'pending' && (
+              <div className="flex gap-2 mt-2">
+                <Btn color="emerald" icon={<CheckCircle size={12} />} disabled={actionId === r.id} onClick={() => handleStatus(r.id, 'reviewed')}>{t('approve')}</Btn>
+                <Btn color="red" disabled={actionId === r.id} onClick={() => handleStatus(r.id, 'dismissed')}>{t('reject')}</Btn>
+              </div>
+            )}
+          </div>
+        ))}
+      </Section>
+    </div>
   );
 }
 
@@ -497,19 +551,6 @@ function PendingRow({ emoji, label, count, onClick }: { emoji: string; label: st
       <span className="flex-1 text-xs text-navy font-semibold">{label}</span>
       {count > 0 && <span className="text-[10px] bg-crimson text-white font-bold px-2 py-0.5 rounded-full">{count}</span>}
       <span className="text-slate-300 text-xs">›</span>
-    </button>
-  );
-}
-
-function Activity({ emoji, text, time, onClick }: { emoji: string; text: string; time: string; onClick?: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="w-full flex items-start gap-2 p-2 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition text-left">
-      <span>{emoji}</span>
-      <div className="flex-1">
-        <div className="text-slate-700">{text}</div>
-        <div className="text-[10px] text-slate-400">{time}</div>
-      </div>
-      <span className="text-slate-300 self-center">›</span>
     </button>
   );
 }

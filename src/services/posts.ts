@@ -1,6 +1,7 @@
 import type { Post, PostCategory } from '../data';
 import type { ContentStatus, DbPost } from '../types/database';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { isDemoMode } from '../lib/config';
 import { createNotification } from './notifications';
 import { fetchApprovedEvents } from './events';
 import { fetchApprovedJobs } from './jobs';
@@ -98,7 +99,7 @@ export async function fetchCommunityFeed(): Promise<Post[]> {
 
 export async function fetchApprovedPosts(): Promise<Post[]> {
   if (!isSupabaseConfigured) {
-    return mockPosts.filter((p) => p.status === 'approved');
+    return isDemoMode() ? mockPosts.filter((p) => p.status === 'approved') : [];
   }
 
   const { data, error } = await getSupabase()
@@ -108,16 +109,17 @@ export async function fetchApprovedPosts(): Promise<Post[]> {
     .order('pinned', { ascending: false })
     .order('created_at', { ascending: false });
 
-  if (error || !data?.length) {
-    return mockPosts.filter((p) => p.status === 'approved');
+  if (error) {
+    console.error('[posts] fetchApproved:', error.message);
+    return isDemoMode() ? mockPosts.filter((p) => p.status === 'approved') : [];
   }
 
-  return data.map(toAppPost);
+  return (data ?? []).map(toAppPost);
 }
 
 export async function fetchPostsForAdmin(): Promise<Post[]> {
   if (!isSupabaseConfigured) {
-    return mockPosts;
+    return isDemoMode() ? mockPosts : [];
   }
 
   const { data, error } = await getSupabase()
@@ -125,11 +127,12 @@ export async function fetchPostsForAdmin(): Promise<Post[]> {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error || !data) {
-    return mockPosts;
+  if (error) {
+    console.error('[posts] fetchAdmin:', error.message);
+    return isDemoMode() ? mockPosts : [];
   }
 
-  return data.map(toAppPost);
+  return (data ?? []).map(toAppPost);
 }
 
 export async function createPost(input: {

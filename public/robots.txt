@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://royse-city-connect.vercel.app/sitemap.xml
