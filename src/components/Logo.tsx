@@ -1,4 +1,4 @@
-const LOGO_SRC = '/logo.png';
+const LOGO_SRC = '/logo.jpg';
 
 export function LogoMark({ size = 40, className = '' }: { size?: number; className?: string }) {
   return (

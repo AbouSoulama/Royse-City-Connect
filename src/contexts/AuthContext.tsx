@@ -216,7 +216,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
 
     const redirectTo = getAuthRedirectUrl();
-    if (!redirectTo) return { error: 'Could not determine redirect URL.' };
+    if (!redirectTo) {
+      return { error: 'URL de redirection manquante. Dans Supabase, Site URL doit être https://votre-app.vercel.app (avec https://). Ajoutez aussi VITE_APP_URL dans Vercel.' };
+    }
 
     sessionStorage.setItem('rc_oauth_pending', '1');
 
@@ -233,7 +235,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword: AuthContextValue['resetPassword'] = async (email) => {
     if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
-    const redirectTo = `${window.location.origin}/recovery`;
+    const base = getAuthRedirectUrl() || (typeof window !== 'undefined' ? window.location.origin : '');
+    const redirectTo = `${base.replace(/\/$/, '')}/recovery`;
     const { error } = await getSupabase().auth.resetPasswordForEmail(email, { redirectTo });
     return error ? { error: error.message } : {};
   };

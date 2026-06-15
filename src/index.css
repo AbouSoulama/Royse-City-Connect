@@ -10,11 +10,13 @@
   --color-cream: #FAF8F5;
 }
 
-html, body, #root {
+html {
   height: 100%;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  height: 100dvh;
+  -webkit-text-size-adjust: 100%;
+}
+
+body, #root {
+  height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -23,9 +25,8 @@ html, body, #root {
   background-color: #f1f5f9;
 }
 
-#root {
-  display: flex;
-  flex-direction: column;
+@supports (height: 100dvh) {
+  html { height: 100dvh; }
 }
 
 /* Hide scrollbar in phone frame */

@@ -26,15 +26,15 @@ export function PhoneShell({
   const [langOpen, setLangOpen] = useState(false);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] w-full overflow-hidden bg-slate-200 bg-pattern flex items-stretch md:items-center justify-center md:p-6">
-      <div className="w-full min-h-screen min-h-[100dvh] md:w-[420px] md:h-[860px] md:min-h-0 md:max-h-[calc(100dvh-3rem)] bg-white md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative overflow-hidden flex flex-col">
+    <div className="fixed inset-0 w-full overflow-hidden bg-slate-200 bg-pattern flex items-stretch md:items-center justify-center md:p-6">
+      <div className="w-full h-full max-h-full md:w-[420px] md:h-[min(860px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] bg-white md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative overflow-hidden flex flex-col">
         <div className="hidden md:flex absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl z-50 items-end justify-center pb-1">
           <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
           <div className="w-12 h-1.5 rounded-full bg-slate-700" />
         </div>
 
         {!hideHeader && (
-          <header className="shrink-0 bg-white border-b border-slate-100 px-3 pt-6 md:pt-8 pb-2.5 flex items-center justify-between relative z-10 gap-2">
+          <header className="shrink-0 bg-white border-b border-slate-100 px-3 pt-[max(1.25rem,env(safe-area-inset-top,0px))] md:pt-8 pb-2.5 flex items-center justify-between relative z-10 gap-2">
             <button onClick={() => setPage('home')} className="flex items-center min-w-0 active:opacity-70">
               <LogoHeader height={34} />
             </button>
