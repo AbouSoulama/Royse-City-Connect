@@ -44,6 +44,7 @@ export function Profile({
   const [stats, setStats] = useState({ posts: 0, events: 0 });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const [editName, setEditName] = useState(user.name);
   const [editPhone, setEditPhone] = useState(user.phone);
@@ -260,10 +261,34 @@ export function Profile({
       </div>
 
       <div className="px-4 mt-6">
-        <button onClick={onSignOut} className="w-full bg-white border border-crimson/20 text-crimson font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-crimson/5">
+        <button
+          type="button"
+          onClick={() => setLogoutOpen(true)}
+          className="w-full bg-white border border-crimson/20 text-crimson font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-crimson/5"
+        >
           <LogoutIcon size={18} /> {t('signOut')}
         </button>
       </div>
+
+      <ModalSheet open={logoutOpen} onClose={() => setLogoutOpen(false)} title={t('signOutConfirmTitle')}>
+        <div className="p-4 pb-8 space-y-4">
+          <p className="text-sm text-slate-600 leading-relaxed">{t('signOutConfirmMessage')}</p>
+          <button
+            type="button"
+            onClick={() => { setLogoutOpen(false); onSignOut(); }}
+            className="w-full bg-crimson text-white font-bold py-3.5 rounded-xl shadow-lg shadow-crimson/20"
+          >
+            {t('signOutConfirmYes')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setLogoutOpen(false)}
+            className="w-full bg-slate-100 text-navy font-bold py-3.5 rounded-xl"
+          >
+            {t('signOutConfirmCancel')}
+          </button>
+        </div>
+      </ModalSheet>
 
       <ModalSheet open={panel === 'edit'} onClose={() => setPanel(null)} title={t('editProfile')}>
         <div className="p-4 pb-6 space-y-4">

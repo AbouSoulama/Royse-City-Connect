@@ -40,10 +40,10 @@ export function Welcome({
       </div>
 
       <div className={`flex-1 flex flex-col items-center justify-center px-6 relative z-10 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-        <div className="bg-white rounded-3xl p-5 shadow-2xl mb-5 animate-welcome-logo">
+        <div className="bg-white rounded-3xl p-5 shadow-2xl shadow-black/10 mb-5 animate-welcome-logo ring-1 ring-white/80">
           <LogoFull height={88} />
         </div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-center">{t('appName')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-center shimmer-text">{t('appName')}</h1>
         <p className="text-white/60 text-sm mt-1 text-center">{t('welcomeSubtitle')}</p>
 
         <div className="w-full max-w-sm mt-8 space-y-2.5">

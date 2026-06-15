@@ -72,7 +72,7 @@ export function PostCard({ post, onOpen }: { post: Post; onOpen: (p: Post) => vo
     <button
       type="button"
       onClick={() => onOpen(post)}
-      className="w-full text-left bg-white rounded-2xl p-4 border border-slate-100 shadow-sm active:scale-[0.99] transition"
+      className="w-full text-left shine-card rounded-2xl p-4 active:scale-[0.99] transition"
     >
       <div className="flex items-center gap-2 mb-2">
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${categoryColors[getFeedCategory(post)]}`}>
@@ -82,7 +82,7 @@ export function PostCard({ post, onOpen }: { post: Post; onOpen: (p: Post) => vo
         <span className="text-[10px] text-slate-400 ml-auto">{formatPostDate(post.date)}</span>
       </div>
       <h3 className="font-bold text-navy text-sm leading-tight">{post.title}</h3>
-      {post.image && <img src={post.image} alt="" className="w-full mt-2 rounded-xl object-cover max-h-40" />}
+      {post.image && <img src={post.image} alt="" className="img-content w-full mt-2 rounded-xl object-cover max-h-40" loading="lazy" decoding="async" />}
       <p className="text-xs text-slate-600 mt-1 leading-relaxed line-clamp-3">{post.body}</p>
       <div className="flex items-center gap-3 mt-3 pt-2 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
         <span className="text-[11px] text-slate-500 flex-1">

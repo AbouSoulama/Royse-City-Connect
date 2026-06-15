@@ -30,7 +30,7 @@ function readLang(): Lang {
 }
 
 function AppContent() {
-  const { user, loading, signOut, refreshProfile, authError } = useAuth();
+  const { user, loading, signOut, refreshProfile, authError, oauthCompleting } = useAuth();
   const nav = useNavigation();
   const { stage, page, overlay, authMode, setStage, setPage, setOverlay, setAuthMode } = nav;
   const { notifications, unreadCount, markAllRead } = useNotifications(user?.id, user?.guest);
@@ -47,27 +47,27 @@ function AppContent() {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  // Utilisateur connecté → toujours l'app (évite retour welcome après Google OAuth)
   useEffect(() => {
     if (!loading && user && !user.guest) {
-      if (stage === 'welcome' || stage === 'onboarding' || stage === 'auth') {
-        setStage('app', true);
-      }
+      setStage('app', true);
+      setPage('home');
       touchLastSeen();
     }
-  }, [loading, user, stage, setStage]);
+  }, [loading, user, setStage, setPage]);
 
   const ctx = useMemo(
     () => ({ lang, setLang, t: (k: TKey) => translations[lang][k] }),
     [lang]
   );
 
-  if (loading) {
+  if (loading || oauthCompleting) {
     return (
       <LangContext.Provider value={ctx}>
         <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav>
           <div className="flex flex-col items-center justify-center min-h-full text-slate-500 text-sm gap-3 p-6">
             <div className="w-10 h-10 rounded-full border-2 border-navy border-t-transparent animate-spin" />
-            <p>Loading…</p>
+            <p>{oauthCompleting ? (lang === 'fr' ? 'Connexion Google en cours…' : 'Signing in with Google…') : (lang === 'fr' ? 'Chargement…' : 'Loading…')}</p>
           </div>
         </PhoneShell>
       </LangContext.Provider>
@@ -91,7 +91,7 @@ function AppContent() {
     );
   }
 
-  const effectiveStage = user && !user.guest && stage !== 'welcome' && stage !== 'onboarding' && stage !== 'auth' ? 'app' : stage;
+  const effectiveStage = user && !user.guest ? 'app' : stage;
 
   const shellProps = {
     page,

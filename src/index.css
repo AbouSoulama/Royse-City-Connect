@@ -83,3 +83,66 @@ body, #root {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 .animate-hero-in { animation: heroIn 0.45s ease-out both; }
+
+/* ─── Premium UI polish ─────────────────────────────────────── */
+.img-crisp {
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.img-content {
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.shine-card {
+  position: relative;
+  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+  box-shadow:
+    0 1px 2px rgba(30, 58, 95, 0.04),
+    0 8px 24px rgba(30, 58, 95, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.shine-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,54,74,0.08) 50%, rgba(30,58,95,0.06) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+}
+
+.phone-glow {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    0 25px 50px -12px rgba(30, 58, 95, 0.18),
+    0 0 80px rgba(200, 54, 74, 0.06);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #1E3A5F 0%, #C8364A 50%, #1E3A5F 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}

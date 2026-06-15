@@ -9,6 +9,7 @@ interface AuthContextValue {
   loading: boolean;
   isConfigured: boolean;
   authError: string | null;
+  oauthCompleting: boolean;
   refreshProfile: () => Promise<void>;
   signUp: (input: {
     email: string;
@@ -28,7 +29,8 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const AUTH_INIT_TIMEOUT_MS = 8000;
+const AUTH_INIT_TIMEOUT_MS = 12000;
+const OAUTH_PENDING_KEY = 'rc_oauth_pending';
 
 function profileToUser(profile: Profile, email?: string): AuthUser {
   return {
@@ -58,6 +60,14 @@ function userFromAuth(authUser: User): AuthUser {
   };
 }
 
+export function isOAuthCallback(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('code')) return true;
+  const hash = window.location.hash;
+  return hash.includes('access_token') || hash.includes('type=recovery');
+}
+
 function readOAuthError(): string | null {
   const params = new URLSearchParams(window.location.search);
   const err = params.get('error_description') || params.get('error');
@@ -79,19 +89,20 @@ function cleanOAuthUrl() {
       dirty = true;
     }
   }
-  if (url.hash.includes('access_token') || url.hash.includes('error')) {
-    url.hash = '';
+  if (url.hash.includes('access_token') || url.hash.includes('error') || url.hash.includes('type=recovery')) {
+    url.hash = '#home';
     dirty = true;
   }
   if (dirty) {
     const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '') + url.hash;
-    window.history.replaceState(window.history.state, document.title, clean || '/');
+    window.history.replaceState(window.history.state, document.title, clean || '/#home');
   }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [oauthCompleting, setOauthCompleting] = useState(() => isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1');
   const [authError, setAuthError] = useState<string | null>(() => readOAuthError());
 
   const loadProfile = useCallback(async (authUser: User): Promise<void> => {
@@ -109,8 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
         const { data: retry } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
         if (retry) {
           setUser(profileToUser(retry, authUser.email));
@@ -127,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false);
+      setOauthCompleting(false);
       return;
     }
 
@@ -134,7 +146,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const finishLoading = () => {
-      if (mounted) setLoading(false);
+      if (mounted) {
+        setLoading(false);
+        setOauthCompleting(false);
+      }
     };
 
     const timeout = window.setTimeout(finishLoading, AUTH_INIT_TIMEOUT_MS);
@@ -143,33 +158,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
 
       if (session?.user) {
-        void loadProfile(session.user);
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          cleanOAuthUrl();
-          setAuthError(null);
-        }
+        void loadProfile(session.user).then(() => {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+            sessionStorage.removeItem(OAUTH_PENDING_KEY);
+            setOauthCompleting(false);
+            setAuthError(null);
+            if (event === 'SIGNED_IN' || isOAuthCallback()) {
+              cleanOAuthUrl();
+            }
+          }
+        });
       } else if (!session) {
+        const pending = sessionStorage.getItem(OAUTH_PENDING_KEY) === '1' || isOAuthCallback();
+        if (pending && (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT')) {
+          return;
+        }
         setUser((prev) => (prev?.guest ? prev : null));
       }
 
-      if (event === 'INITIAL_SESSION') {
+      if (event === 'INITIAL_SESSION' && !isOAuthCallback() && sessionStorage.getItem(OAUTH_PENDING_KEY) !== '1') {
         window.clearTimeout(timeout);
         finishLoading();
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      if (session?.user) {
-        void loadProfile(session.user);
+    const initAuth = async () => {
+      try {
+        if (isOAuthCallback()) {
+          setOauthCompleting(true);
+          const code = new URLSearchParams(window.location.search).get('code');
+          if (code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) {
+              console.error('[auth] OAuth code exchange failed:', error.message);
+              setAuthError(error.message);
+              sessionStorage.removeItem(OAUTH_PENDING_KEY);
+            }
+          }
+        }
+
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) console.error('[auth] getSession:', error.message);
+
+        if (mounted && session?.user) {
+          await loadProfile(session.user);
+          sessionStorage.removeItem(OAUTH_PENDING_KEY);
+          cleanOAuthUrl();
+        } else if (mounted && isOAuthCallback() && !session) {
+          setAuthError('Google sign-in could not be completed. Please try again.');
+          sessionStorage.removeItem(OAUTH_PENDING_KEY);
+        }
+      } catch (e) {
+        console.error('[auth] init failed:', e);
+      } finally {
+        window.clearTimeout(timeout);
+        finishLoading();
       }
-      window.clearTimeout(timeout);
-      finishLoading();
-    }).catch((e) => {
-      console.error('[auth] getSession failed:', e);
-      window.clearTimeout(timeout);
-      finishLoading();
-    });
+    };
+
+    void initAuth();
 
     return () => {
       mounted = false;
@@ -181,8 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp: AuthContextValue['signUp'] = async (input) => {
     if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
 
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await getSupabase().auth.signUp({
       email: input.email,
       password: input.password,
       options: {
@@ -215,12 +261,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle: AuthContextValue['signInWithGoogle'] = async () => {
     if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
 
-    const redirectTo = getAuthRedirectUrl();
-    if (!redirectTo) {
-      return { error: 'URL de redirection manquante. Dans Supabase, Site URL doit être https://votre-app.vercel.app (avec https://). Ajoutez aussi VITE_APP_URL dans Vercel.' };
+    const base = getAuthRedirectUrl();
+    if (!base) {
+      return { error: 'URL de redirection manquante. Configurez VITE_APP_URL et Supabase Site URL avec https://.' };
     }
 
-    sessionStorage.setItem('rc_oauth_pending', '1');
+    const redirectTo = `${base.replace(/\/$/, '')}/`;
+    sessionStorage.setItem(OAUTH_PENDING_KEY, '1');
 
     const { error } = await getSupabase().auth.signInWithOAuth({
       provider: 'google',
@@ -230,6 +277,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
+    if (error) sessionStorage.removeItem(OAUTH_PENDING_KEY);
     return error ? { error: error.message } : {};
   };
 
@@ -248,6 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    sessionStorage.removeItem(OAUTH_PENDING_KEY);
     if (isSupabaseConfigured) {
       await getSupabase().auth.signOut();
     }
@@ -256,6 +305,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const enterAsGuest = () => {
     setLoading(false);
+    setOauthCompleting(false);
     setUser({
       name: 'Guest',
       phone: '',
@@ -277,6 +327,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isConfigured: isSupabaseConfigured,
       authError,
+      oauthCompleting,
       refreshProfile,
       signUp,
       signIn,
@@ -286,7 +337,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       enterAsGuest,
     }),
-    [user, loading, authError, refreshProfile]
+    [user, loading, authError, oauthCompleting, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
