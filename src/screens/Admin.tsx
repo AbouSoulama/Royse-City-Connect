@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n';
 import { Post, Business, Event, Job, categoryEmoji } from '../data';
-import { fetchBusinessesForAdmin, toggleBusinessFeatured, toggleBusinessVerified, updateBusinessStatus } from '../services/businesses';
-import { fetchEventsForAdmin, toggleEventFeatured, updateEventStatus } from '../services/events';
+import { fetchBusinessesForAdmin, toggleBusinessFeatured, toggleBusinessVerified, updateBusinessStatus, deleteBusiness } from '../services/businesses';
+import { fetchEventsForAdmin, toggleEventFeatured, updateEventStatus, deleteEvent } from '../services/events';
 import { deleteJob, fetchJobsForAdmin, updateJobStatus } from '../services/jobs';
-import { fetchPostsForAdmin, togglePostPin, updatePostStatus } from '../services/posts';
+import { fetchPostsForAdmin, togglePostPin, updatePostStatus, deletePost } from '../services/posts';
 import { fetchFeedbackForAdmin } from '../services/feedback';
-import { fetchAdminStats, fetchAdminUsers } from '../services/admin';
+import { fetchAdminStats, fetchAdminUsers, adminSetUserRole, adminDeleteUser, adminInviteUser } from '../services/admin';
 import { fetchReportsForAdmin, updateReportStatus } from '../services/reports';
 import type { AppFeedback } from '../services/feedback';
 import type { ContentReport } from '../services/reports';
@@ -178,9 +178,10 @@ function PostsModeration() {
             </div>
             <p className="text-xs text-slate-600 line-clamp-2">{p.body}</p>
             <div className="text-[10px] text-slate-400 mt-1">By {p.author} • {p.city}</div>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 flex-wrap">
               <Btn color="emerald" icon={<CheckCircle size={12} />} disabled={actionId === p.id} onClick={() => handleStatus(p.id, 'approved')}>{t('approve')}</Btn>
               <Btn color="red" icon={<XIcon size={12} />} disabled={actionId === p.id} onClick={() => handleStatus(p.id, 'rejected')}>{t('reject')}</Btn>
+              <Btn color="red" small disabled={actionId === p.id} onClick={async () => { if (confirm('Delete permanently?')) { setActionId(p.id); await deletePost(p.id); load(); setActionId(null); } }}>{t('delete')}</Btn>
             </div>
           </div>
         ))}
@@ -201,6 +202,7 @@ function PostsModeration() {
             >
               <PinIcon size={14} />
             </button>
+            <Btn color="red" small disabled={actionId === p.id} onClick={async () => { if (confirm('Delete permanently?')) { setActionId(p.id); await deletePost(p.id); load(); setActionId(null); } }}>{t('delete')}</Btn>
           </div>
         ))}
       </Section>
@@ -255,6 +257,7 @@ function BusinessesModeration() {
             <div className="flex flex-col gap-1">
               <Btn color="emerald" small disabled={actionId === b.id} onClick={() => run(b.id, () => updateBusinessStatus(b.id, 'approved'))}>{t('approve')}</Btn>
               <Btn color="red" small disabled={actionId === b.id} onClick={() => run(b.id, () => updateBusinessStatus(b.id, 'rejected'))}>{t('reject')}</Btn>
+              <Btn color="red" small disabled={actionId === b.id} onClick={() => { if (confirm('Delete permanently?')) run(b.id, () => deleteBusiness(b.id)); }}>{t('delete')}</Btn>
             </div>
           </div>
         ))}
@@ -290,6 +293,7 @@ function BusinessesModeration() {
               >
                 {b.featured ? 'Unfeature' : t('feature')}
               </Btn>
+              <Btn color="red" small disabled={actionId === b.id} onClick={() => { if (confirm('Delete permanently?')) run(b.id, () => deleteBusiness(b.id)); }}>{t('delete')}</Btn>
             </div>
           </div>
         ))}
@@ -339,9 +343,10 @@ function EventsModeration() {
                 <div className="text-[10px] text-slate-400">{e.organizer} • {e.city}</div>
               </div>
             </div>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 flex-wrap">
               <Btn color="emerald" small disabled={actionId === e.id} onClick={() => run(e.id, () => updateEventStatus(e.id, 'approved'))}>{t('approve')}</Btn>
               <Btn color="red" small disabled={actionId === e.id} onClick={() => run(e.id, () => updateEventStatus(e.id, 'rejected'))}>{t('reject')}</Btn>
+              <Btn color="red" small disabled={actionId === e.id} onClick={() => { if (confirm('Delete permanently?')) run(e.id, () => deleteEvent(e.id)); }}>{t('delete')}</Btn>
             </div>
           </div>
         ))}
@@ -355,10 +360,13 @@ function EventsModeration() {
               <h4 className="font-bold text-navy text-sm truncate">{e.title}</h4>
               <div className="text-[10px] text-slate-400">{e.date} • {e.city}</div>
             </div>
+            <div className="flex flex-col gap-1">
             <Btn color="amber" small icon={<StarIcon size={10} />} disabled={actionId === e.id}
               onClick={() => run(e.id, () => toggleEventFeatured(e.id, !e.featured))}>
               {e.featured ? 'Unfeature' : t('feature')}
             </Btn>
+            <Btn color="red" small disabled={actionId === e.id} onClick={() => { if (confirm('Delete permanently?')) run(e.id, () => deleteEvent(e.id)); }}>{t('delete')}</Btn>
+            </div>
           </div>
         ))}
       </Section>
@@ -402,9 +410,10 @@ function JobsModeration() {
           <div key={j.id} className="bg-white rounded-2xl border border-amber-200 p-3">
             <h4 className="font-bold text-navy text-sm">{j.title}</h4>
             <div className="text-[11px] text-slate-500">{j.postedBy} • {j.location}</div>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 flex-wrap">
               <Btn color="emerald" icon={<CheckCircle size={12} />} disabled={actionId === j.id} onClick={() => run(j.id, () => updateJobStatus(j.id, 'approved'))}>{t('approve')}</Btn>
               <Btn color="red" disabled={actionId === j.id} onClick={() => run(j.id, () => updateJobStatus(j.id, 'rejected'))}>{t('reject')}</Btn>
+              <Btn color="red" small disabled={actionId === j.id} onClick={() => { if (confirm('Delete permanently?')) run(j.id, () => deleteJob(j.id)); }}>{t('delete')}</Btn>
             </div>
           </div>
         ))}
@@ -429,38 +438,110 @@ function UsersAdmin() {
   const { t } = useT();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: '', name: '', role: 'member' as AdminUser['role'] });
+  const [inviteMsg, setInviteMsg] = useState('');
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
     fetchAdminUsers().then((data) => {
       setUsers(data);
       setLoading(false);
     });
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleRole = async (userId: string, role: AdminUser['role']) => {
+    setActionId(userId);
+    const { error } = await adminSetUserRole(userId, role);
+    if (!error) load();
+    else alert(error);
+    setActionId(null);
+  };
+
+  const handleDelete = async (userId: string, name: string) => {
+    if (!confirm(`Delete profile for ${name}? They must sign up again to return.`)) return;
+    setActionId(userId);
+    const { error } = await adminDeleteUser(userId);
+    if (!error) load();
+    else alert(error);
+    setActionId(null);
+  };
+
+  const handleInvite = async () => {
+    if (!inviteForm.email.trim()) return;
+    setInviteMsg('');
+    const { error } = await adminInviteUser(inviteForm);
+    if (error) { setInviteMsg(error); return; }
+    setInviteMsg('Invite saved. User will get this role when they sign up with this email.');
+    setInviteForm({ email: '', name: '', role: 'member' });
+    setShowInvite(false);
+  };
 
   if (loading) return <div className="text-center text-xs text-slate-400 py-8">Loading users…</div>;
 
   return (
-    <Section title={`${t('users')} (${users.length})`}>
-      {users.length === 0 && <Empty msg="No users found" />}
-      {users.map((u) => (
-        <div key={u.id} className="bg-white rounded-2xl border border-slate-100 p-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-navy to-navy-light text-white flex items-center justify-center font-bold text-sm shrink-0">
-            {u.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1">
-              <h4 className="font-bold text-navy text-sm truncate">{u.name}</h4>
-              {u.role === 'admin' && <span className="text-[9px] bg-crimson text-white font-bold px-1.5 py-0.5 rounded">ADMIN</span>}
-              {u.role === 'business' && <span className="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">BIZ</span>}
-            </div>
-            <div className="text-[10px] text-slate-500 truncate">{u.phone || '—'} • {u.city}</div>
-            {u.lastSeenAt && (
-              <div className="text-[10px] text-slate-400">Last seen {new Date(u.lastSeenAt).toLocaleDateString()}</div>
-            )}
-          </div>
+    <div className="space-y-4">
+      <button
+        type="button"
+        onClick={() => setShowInvite(!showInvite)}
+        className="w-full bg-navy text-white font-bold py-3 rounded-xl text-sm"
+      >
+        + Invite / add user
+      </button>
+
+      {showInvite && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
+          <p className="text-xs text-slate-500">Pre-assign role before signup. User creates account with this email.</p>
+          <input value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} placeholder="Email" type="email" className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+          <input value={inviteForm.name} onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })} placeholder="Name" className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+          <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as AdminUser['role'] })} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+            <option value="member">Member</option>
+            <option value="business">Business</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button type="button" onClick={handleInvite} className="w-full bg-crimson text-white font-bold py-2.5 rounded-xl text-sm">Save invite</button>
         </div>
-      ))}
-    </Section>
+      )}
+      {inviteMsg && <p className="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-xl">{inviteMsg}</p>}
+
+      <Section title={`${t('users')} (${users.length})`}>
+        {users.length === 0 && <Empty msg="No users found" />}
+        {users.map((u) => (
+          <div key={u.id} className="bg-white rounded-2xl border border-slate-100 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-navy to-navy-light text-white flex items-center justify-center font-bold text-sm shrink-0">
+                {u.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <h4 className="font-bold text-navy text-sm truncate">{u.name}</h4>
+                  {u.role === 'admin' && <span className="text-[9px] bg-crimson text-white font-bold px-1.5 py-0.5 rounded">ADMIN</span>}
+                  {u.role === 'business' && <span className="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">BIZ</span>}
+                </div>
+                <div className="text-[10px] text-slate-500 truncate">{u.phone || '—'} • {u.city}</div>
+              </div>
+            </div>
+            <div className="flex gap-1 mt-2 flex-wrap">
+              {(['member', 'business', 'admin'] as const).map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  disabled={actionId === u.id || u.role === role}
+                  onClick={() => handleRole(u.id, role)}
+                  className={`text-[10px] font-bold px-2 py-1 rounded-lg ${u.role === role ? 'bg-navy text-white' : 'bg-slate-100 text-slate-600'}`}
+                >
+                  {role}
+                </button>
+              ))}
+              <Btn color="red" small disabled={actionId === u.id} onClick={() => handleDelete(u.id, u.name)}>{t('delete')}</Btn>
+            </div>
+          </div>
+        ))}
+      </Section>
+    </div>
   );
 }
 

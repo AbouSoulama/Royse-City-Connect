@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useT } from '../i18n';
 import { businessCategories, cities, Business } from '../data';
 import { ModalSheet } from '../components/Layout';
@@ -9,13 +10,15 @@ import type { AuthUser } from '../types/auth';
 
 export function Businesses({ user }: { user: AuthUser }) {
   const { t } = useT();
+  const { detail, openDetail, closeDetail } = useNavigation();
   const [search, setSearch] = useState('');
   const [cat, setCat] = useState<string | null>(null);
   const [city, setCity] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Business | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitOpen, setSubmitOpen] = useState(false);
+
+  const selected = detail?.type === 'business' ? businesses.find((b) => b.id === detail.id) ?? null : null;
 
   const load = () => {
     setLoading(true);
@@ -39,7 +42,7 @@ export function Businesses({ user }: { user: AuthUser }) {
   }, [businesses, search, cat, city]);
 
   if (selected) {
-    return <BusinessDetail business={selected} onBack={() => setSelected(null)} />;
+    return <BusinessDetail business={selected} onBack={closeDetail} />;
   }
 
   return (
@@ -90,7 +93,7 @@ export function Businesses({ user }: { user: AuthUser }) {
         {!loading && filtered.map((b) => (
           <button
             key={b.id}
-            onClick={() => setSelected(b)}
+            onClick={() => openDetail({ type: 'business', id: b.id })}
             className="w-full text-left bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex active:scale-[0.99] transition"
           >
             <div className={`w-24 shrink-0 bg-gradient-to-br ${b.color} flex items-center justify-center text-5xl`}>

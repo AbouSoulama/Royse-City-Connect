@@ -8,6 +8,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   isConfigured: boolean;
+  authError: string | null;
   refreshProfile: () => Promise<void>;
   signUp: (input: {
     email: string;
@@ -27,6 +28,8 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const AUTH_INIT_TIMEOUT_MS = 8000;
+
 function profileToUser(profile: Profile, email?: string): AuthUser {
   return {
     id: profile.id,
@@ -43,58 +46,82 @@ function profileToUser(profile: Profile, email?: string): AuthUser {
 
 function userFromAuth(authUser: User): AuthUser {
   const meta = authUser.user_metadata ?? {};
+  const role = meta.role === 'admin' || meta.role === 'business' ? meta.role : 'member';
   return {
     id: authUser.id,
     name: (meta.full_name as string) || (meta.name as string) || authUser.email?.split('@')[0] || 'Community Member',
     phone: (meta.phone as string) || '',
     email: authUser.email,
     city: (meta.city as string) || 'Royse City',
-    role: 'member',
+    role,
     avatarUrl: (meta.avatar_url as string) || (meta.picture as string) || undefined,
   };
 }
 
+function readOAuthError(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  const err = params.get('error_description') || params.get('error');
+  if (err) return decodeURIComponent(err.replace(/\+/g, ' '));
+  const hash = window.location.hash;
+  if (hash.includes('error=')) {
+    const hashParams = new URLSearchParams(hash.replace('#', ''));
+    return hashParams.get('error_description') || hashParams.get('error');
+  }
+  return null;
+}
+
 function cleanOAuthUrl() {
   const url = new URL(window.location.href);
-  if (url.searchParams.has('code') || url.hash.includes('access_token')) {
-    url.searchParams.delete('code');
-    url.searchParams.delete('error');
-    url.searchParams.delete('error_description');
-    const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '');
-    window.history.replaceState({}, document.title, clean || '/');
+  let dirty = false;
+  for (const key of ['code', 'error', 'error_description', 'access_token', 'refresh_token', 'type']) {
+    if (url.searchParams.has(key)) {
+      url.searchParams.delete(key);
+      dirty = true;
+    }
+  }
+  if (url.hash.includes('access_token') || url.hash.includes('error')) {
+    url.hash = '';
+    dirty = true;
+  }
+  if (dirty) {
+    const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '') + url.hash;
+    window.history.replaceState(window.history.state, document.title, clean || '/');
   }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [authError, setAuthError] = useState<string | null>(() => readOAuthError());
 
-  const loadProfile = useCallback(async (authUser: User): Promise<boolean> => {
+  const loadProfile = useCallback(async (authUser: User): Promise<void> => {
     const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', authUser.id)
-      .single();
 
-    if (data && !error) {
-      setUser(profileToUser(data, authUser.email));
-      return true;
-    }
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle();
 
-    // Profile row may lag behind OAuth trigger — retry briefly
-    for (let attempt = 0; attempt < 3; attempt++) {
-      await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
-      const { data: retry } = await supabase.from('profiles').select('*').eq('id', authUser.id).single();
-      if (retry) {
-        setUser(profileToUser(retry, authUser.email));
-        return true;
+      if (data && !error) {
+        setUser(profileToUser(data, authUser.email));
+        return;
       }
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+        const { data: retry } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+        if (retry) {
+          setUser(profileToUser(retry, authUser.email));
+          return;
+        }
+      }
+    } catch (e) {
+      console.error('[auth] profile load failed:', e);
     }
 
-    // Fallback so Google sign-in still works if profile trigger is delayed/missing
     setUser(userFromAuth(authUser));
-    return false;
   }, []);
 
   useEffect(() => {
@@ -104,46 +131,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const supabase = getSupabase();
+    let mounted = true;
 
-    const init = async () => {
-      // PKCE: exchange ?code= from Google redirect (production on Vercel)
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          console.error('OAuth code exchange failed:', error.message);
-        }
-        cleanOAuthUrl();
-      }
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await loadProfile(session.user);
-      }
-      setLoading(false);
+    const finishLoading = () => {
+      if (mounted) setLoading(false);
     };
 
-    init();
+    const timeout = window.setTimeout(finishLoading, AUTH_INIT_TIMEOUT_MS);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
       if (session?.user) {
-        await loadProfile(session.user);
-        if (event === 'SIGNED_IN') {
+        void loadProfile(session.user);
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           cleanOAuthUrl();
+          setAuthError(null);
         }
-      } else {
+      } else if (!session) {
         setUser((prev) => (prev?.guest ? prev : null));
+      }
+
+      if (event === 'INITIAL_SESSION') {
+        window.clearTimeout(timeout);
+        finishLoading();
       }
     });
 
-    return () => subscription.unsubscribe();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
+        void loadProfile(session.user);
+      }
+      window.clearTimeout(timeout);
+      finishLoading();
+    }).catch((e) => {
+      console.error('[auth] getSession failed:', e);
+      window.clearTimeout(timeout);
+      finishLoading();
+    });
+
+    return () => {
+      mounted = false;
+      window.clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [loadProfile]);
 
   const signUp: AuthContextValue['signUp'] = async (input) => {
-    if (!isSupabaseConfigured) {
-      return { error: 'Supabase not configured' };
-    }
+    if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
 
     const supabase = getSupabase();
     const { data, error } = await supabase.auth.signUp({
@@ -160,47 +196,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) return { error: error.message };
-
     if (data.user && !data.session) {
       return { error: 'Check your email to confirm your account before signing in.' };
     }
-
-    if (data.user) {
-      await loadProfile(data.user);
-    }
-
+    if (data.user) await loadProfile(data.user);
     return {};
   };
 
   const signIn: AuthContextValue['signIn'] = async (email, password) => {
-    if (!isSupabaseConfigured) {
-      return { error: 'Supabase not configured' };
-    }
+    if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
 
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
+    const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
-
-    if (data.user) {
-      await loadProfile(data.user);
-    }
-
+    if (data.user) await loadProfile(data.user);
     return {};
   };
 
   const signInWithGoogle: AuthContextValue['signInWithGoogle'] = async () => {
-    if (!isSupabaseConfigured) {
-      return { error: 'Supabase not configured' };
-    }
+    if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
 
     const redirectTo = getAuthRedirectUrl();
-    if (!redirectTo) {
-      return { error: 'Could not determine redirect URL.' };
-    }
+    if (!redirectTo) return { error: 'Could not determine redirect URL.' };
 
-    const supabase = getSupabase();
-    const { error } = await supabase.auth.signInWithOAuth({
+    sessionStorage.setItem('rc_oauth_pending', '1');
+
+    const { error } = await getSupabase().auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
@@ -232,6 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const enterAsGuest = () => {
+    setLoading(false);
     setUser({
       name: 'Guest',
       phone: '',
@@ -243,11 +264,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (!isSupabaseConfigured || !user?.id || user.guest) return;
-    const supabase = getSupabase();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      await loadProfile(session.user);
-    }
+    const { data: { session } } = await getSupabase().auth.getSession();
+    if (session?.user) await loadProfile(session.user);
   }, [loadProfile, user?.id, user?.guest]);
 
   const value = useMemo(
@@ -255,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       isConfigured: isSupabaseConfigured,
+      authError,
       refreshProfile,
       signUp,
       signIn,
@@ -264,7 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       enterAsGuest,
     }),
-    [user, loading, refreshProfile]
+    [user, loading, authError, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

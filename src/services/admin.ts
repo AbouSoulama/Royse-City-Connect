@@ -105,3 +105,40 @@ export async function touchLastSeen(): Promise<void> {
     // optional — migration may not be applied yet
   }
 }
+
+export async function adminSetUserRole(
+  userId: string,
+  role: Profile['role']
+): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured) return { error: 'Not configured' };
+  const { error } = await getSupabase().rpc('admin_set_user_role', {
+    target_id: userId,
+    new_role: role,
+  });
+  return error ? { error: error.message } : {};
+}
+
+export async function adminDeleteUser(userId: string): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured) return { error: 'Not configured' };
+  const { error } = await getSupabase().rpc('admin_delete_profile', { target_id: userId });
+  return error ? { error: error.message } : {};
+}
+
+export async function adminInviteUser(input: {
+  email: string;
+  name: string;
+  role: Profile['role'];
+  createdBy?: string;
+}): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured) return { error: 'Not configured' };
+
+  const { error } = await getSupabase().from('user_invites').upsert({
+    email: input.email.trim().toLowerCase(),
+    name: input.name.trim(),
+    role: input.role,
+    created_by: input.createdBy ?? null,
+  });
+
+  return error ? { error: error.message } : {};
+}
+

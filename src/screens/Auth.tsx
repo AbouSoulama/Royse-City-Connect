@@ -14,11 +14,13 @@ export function Auth({
   onBack,
   initialMode = 'signin',
   recoveryMode = false,
+  initialError = null,
 }: {
   onSuccess: () => void;
   onBack?: () => void;
   initialMode?: 'signin' | 'signup';
   recoveryMode?: boolean;
+  initialError?: string | null;
 }) {
   const { t, lang, setLang } = useT();
   const { signUp, signIn, signInWithGoogle, resetPassword, updatePassword, enterAsGuest, isConfigured } = useAuth();
@@ -26,7 +28,7 @@ export function Auth({
   const [role, setRole] = useState<'member' | 'business'>('member');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [info, setInfo] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',

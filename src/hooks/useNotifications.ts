@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
-import { notifications as mockNotifications } from '../data';
 import {
   AppNotification,
   fetchNotifications,
@@ -13,13 +12,13 @@ export function useNotifications(userId?: string, guest?: boolean) {
 
   const reload = useCallback(async () => {
     if (guest || !userId) {
-      setNotifications(mockNotifications as AppNotification[]);
+      setNotifications([]);
       setLoading(false);
       return;
     }
 
     if (!isSupabaseConfigured) {
-      setNotifications(mockNotifications as AppNotification[]);
+      setNotifications([]);
       setLoading(false);
       return;
     }

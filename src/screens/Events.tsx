@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useT } from '../i18n';
 import { Event } from '../data';
 import { ModalSheet } from '../components/Layout';
@@ -14,11 +15,13 @@ import { CalIcon, MapPin, ClockIcon, ChevronLeft, CheckCircle, ShareIcon, PlusIc
 
 export function Events({ user }: { user: AuthUser }) {
   const { t } = useT();
+  const { detail, openDetail, closeDetail } = useNavigation();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<Event | null>(null);
   const [going, setGoing] = useState<Record<string, boolean>>({});
   const [submitOpen, setSubmitOpen] = useState(false);
+
+  const selected = detail?.type === 'event' ? events.find((e) => e.id === detail.id) ?? null : null;
 
   const load = async () => {
     setLoading(true);
@@ -45,17 +48,13 @@ export function Events({ user }: { user: AuthUser }) {
       return;
     }
     await load();
-    if (selected?.id === eventId) {
-      const updated = (await fetchApprovedEvents()).find((e) => e.id === eventId);
-      if (updated) setSelected(updated);
-    }
   };
 
   if (selected) {
     return (
       <EventDetail
         event={selected}
-        onBack={() => setSelected(null)}
+        onBack={closeDetail}
         isGoing={!!going[selected.id]}
         onRsvp={() => handleRsvp(selected.id)}
         canRsvp={!user.guest && !!user.id}
@@ -78,7 +77,7 @@ export function Events({ user }: { user: AuthUser }) {
       {!loading && featured[0] && (
         <div className="p-4">
           <button
-            onClick={() => setSelected(featured[0])}
+            onClick={() => openDetail({ type: 'event', id: featured[0].id })}
             className="block w-full text-left rounded-2xl overflow-hidden shadow-lg active:scale-[0.99] transition"
           >
             <div className={`h-44 bg-gradient-to-br ${featured[0].color} flex items-center justify-center text-7xl relative`}>
@@ -105,7 +104,7 @@ export function Events({ user }: { user: AuthUser }) {
         {!loading && sorted.filter((e) => e.id !== featured[0]?.id).map((e) => (
           <button
             key={e.id}
-            onClick={() => setSelected(e)}
+            onClick={() => openDetail({ type: 'event', id: e.id })}
             className="w-full text-left bg-white rounded-2xl border border-slate-100 shadow-sm p-3 flex gap-3 active:scale-[0.99] transition"
           >
             <div className={`w-16 shrink-0 rounded-xl bg-gradient-to-br ${e.color} flex flex-col items-center justify-center text-white py-2`}>

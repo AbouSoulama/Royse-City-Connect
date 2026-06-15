@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Lang, LangContext, translations, TKey } from './i18n';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
 import { useNotifications } from './hooks/useNotifications';
-import { PhoneShell, Page, ModalSheet } from './components/Layout';
+import { PhoneShell, ModalSheet } from './components/Layout';
 import { Welcome, Onboarding } from './screens/Onboarding';
 import { Auth } from './screens/Auth';
 import { Home } from './screens/Home';
@@ -28,19 +29,12 @@ function readLang(): Lang {
   return 'en';
 }
 
-type Stage = 'welcome' | 'onboarding' | 'auth' | 'app';
-
 function AppContent() {
-  const { user, loading, signOut, refreshProfile } = useAuth();
+  const { user, loading, signOut, refreshProfile, authError } = useAuth();
+  const nav = useNavigation();
+  const { stage, page, overlay, authMode, setStage, setPage, setOverlay, setAuthMode } = nav;
   const { notifications, unreadCount, markAllRead } = useNotifications(user?.id, user?.guest);
   const [lang, setLangState] = useState<Lang>(readLang);
-  const [stage, setStage] = useState<Stage>('welcome');
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [page, setPageState] = useState<Page>('home');
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [recoveryMode] = useState(() => window.location.pathname === '/recovery' || window.location.hash.includes('type=recovery'));
 
   const setLang = (l: Lang) => {
@@ -49,22 +43,18 @@ function AppContent() {
     document.documentElement.lang = l;
   };
 
-  const setPage = (p: Page) => {
-    setProfileOpen(false);
-    setAdminOpen(false);
-    setPageState(p);
-  };
-
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
 
   useEffect(() => {
     if (!loading && user && !user.guest) {
-      setStage('app');
+      if (stage === 'welcome' || stage === 'onboarding' || stage === 'auth') {
+        setStage('app', true);
+      }
       touchLastSeen();
     }
-  }, [loading, user]);
+  }, [loading, user, stage, setStage]);
 
   const ctx = useMemo(
     () => ({ lang, setLang, t: (k: TKey) => translations[lang][k] }),
@@ -75,7 +65,10 @@ function AppContent() {
     return (
       <LangContext.Provider value={ctx}>
         <PhoneShell page={page} setPage={setPage} onOpenNotifs={() => {}} onOpenProfile={() => {}} unreadCount={0} hideHeader hideNav>
-          <div className="flex items-center justify-center min-h-full text-slate-400 text-sm">Loading…</div>
+          <div className="flex flex-col items-center justify-center min-h-full text-slate-500 text-sm gap-3 p-6">
+            <div className="w-10 h-10 rounded-full border-2 border-navy border-t-transparent animate-spin" />
+            <p>Loading…</p>
+          </div>
         </PhoneShell>
       </LangContext.Provider>
     );
@@ -88,8 +81,8 @@ function AppContent() {
           <Auth
             recoveryMode
             onSuccess={() => {
-              window.history.replaceState({}, '', '/');
-              setStage('app');
+              window.history.replaceState(null, '', '/#home');
+              setStage('app', true);
               setPage('home');
             }}
           />
@@ -98,7 +91,7 @@ function AppContent() {
     );
   }
 
-  const effectiveStage = user && !user.guest && stage !== 'welcome' && stage !== 'onboarding' ? 'app' : stage;
+  const effectiveStage = user && !user.guest && stage !== 'welcome' && stage !== 'onboarding' && stage !== 'auth' ? 'app' : stage;
 
   const shellProps = {
     page,
@@ -131,8 +124,9 @@ function AppContent() {
         <PhoneShell {...shellProps}>
           <Auth
             initialMode={authMode}
+            initialError={authError}
             onBack={() => setStage('welcome')}
-            onSuccess={() => { setStage('app'); setPage('home'); }}
+            onSuccess={() => { setStage('app', true); setPage('home'); }}
           />
         </PhoneShell>
       )}
@@ -141,36 +135,33 @@ function AppContent() {
         <PhoneShell
           page={page}
           setPage={setPage}
-          onOpenNotifs={() => setNotifOpen(true)}
-          onOpenProfile={() => setProfileOpen(true)}
+          onOpenNotifs={() => setOverlay('notif')}
+          onOpenProfile={() => setOverlay('profile')}
           unreadCount={unreadCount}
         >
-          {adminOpen && user.role === 'admin' ? (
-            <AdminDashboard onBack={() => setAdminOpen(false)} />
-          ) : profileOpen ? (
+          {overlay === 'admin' && user.role === 'admin' ? (
+            <AdminDashboard onBack={() => setOverlay('none')} />
+          ) : overlay === 'profile' ? (
             <Profile
               user={user}
-              onBack={() => setProfileOpen(false)}
+              onBack={() => setOverlay('none')}
               onSignOut={async () => {
                 await signOut();
-                setProfileOpen(false);
-                setStage('welcome');
+                setOverlay('none');
+                setStage('welcome', true);
               }}
               onOpenAdmin={() => {
-                if (user.role === 'admin') {
-                  setProfileOpen(false);
-                  setAdminOpen(true);
-                }
+                if (user.role === 'admin') setOverlay('admin');
               }}
-              onOpenNotifs={() => { setProfileOpen(false); setNotifOpen(true); }}
-              onOpenFeedback={() => { setProfileOpen(false); setFeedbackOpen(true); }}
+              onOpenNotifs={() => setOverlay('notif')}
+              onOpenFeedback={() => setOverlay('feedback')}
               onProfileUpdated={refreshProfile}
               lang={lang}
               setLang={setLang}
             />
           ) : (
             <>
-              {page === 'home' && <Home user={user} goTo={setPage} onOpenFeedback={() => setFeedbackOpen(true)} />}
+              {page === 'home' && <Home user={user} goTo={setPage} onOpenFeedback={() => setOverlay('feedback')} />}
               {page === 'news' && <News user={user} goTo={setPage} />}
               {page === 'businesses' && <Businesses user={user} />}
               {page === 'events' && <Events user={user} />}
@@ -178,13 +169,13 @@ function AppContent() {
             </>
           )}
 
-          <ModalSheet open={notifOpen} onClose={() => setNotifOpen(false)} title={ctx.t('notifTitle')}>
-            <NotificationsList notifications={notifications} onClose={() => setNotifOpen(false)} onMarkAllRead={markAllRead} />
+          <ModalSheet open={overlay === 'notif'} onClose={() => setOverlay('none')} title={ctx.t('notifTitle')}>
+            <NotificationsList notifications={notifications} onClose={() => setOverlay('none')} onMarkAllRead={markAllRead} />
           </ModalSheet>
 
           <FeedbackSheet
-            open={feedbackOpen}
-            onClose={() => setFeedbackOpen(false)}
+            open={overlay === 'feedback'}
+            onClose={() => setOverlay('none')}
             userId={user.guest ? undefined : user.id}
             userName={user.name}
           />
@@ -197,7 +188,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <NavigationProvider>
+        <AppContent />
+      </NavigationProvider>
     </AuthProvider>
   );
 }

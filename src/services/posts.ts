@@ -222,3 +222,9 @@ export async function togglePostPin(
 
   return error ? { error: error.message } : {};
 }
+
+export async function deletePost(postId: string): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
+  const { error } = await getSupabase().from('posts').delete().eq('id', postId);
+  return error ? { error: error.message } : {};
+}

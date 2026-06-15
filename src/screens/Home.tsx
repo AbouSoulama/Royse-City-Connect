@@ -9,6 +9,8 @@ import { PinnedPostCard, PostDetailSheet, formatPostDate } from '../components/P
 import { CheckCircle, MapPin, ChevronRight, StarIcon } from '../components/Icons';
 import { AuthUser } from '../types/auth';
 import { useEffect, useState } from 'react';
+import { useNavigation } from '../contexts/NavigationContext';
+import { resolveFeedItem } from '../lib/share';
 import type { Post } from '../data';
 import type { Page } from '../components/Layout';
 
@@ -23,10 +25,20 @@ export function Home({
 }) {
   const { t } = useT();
   const heroSlides = useHeroSlides();
+  const { detail, openDetail, closeDetail } = useNavigation();
   const [pinned, setPinned] = useState<Post[]>([]);
   const [featuredBiz, setFeaturedBiz] = useState<Business[]>([]);
   const [upcoming, setUpcoming] = useState<Event[]>([]);
-  const [selected, setSelected] = useState<Post | null>(null);
+
+  const selected = detail?.type === 'post' ? pinned.find((p) => {
+    const { itemId } = resolveFeedItem(p);
+    return itemId === detail.id || p.id === detail.id;
+  }) ?? null : null;
+
+  const openPost = (post: Post) => {
+    const { itemId } = resolveFeedItem(post);
+    openDetail({ type: 'post', id: itemId });
+  };
 
   useEffect(() => {
     fetchApprovedPosts().then((posts) => setPinned(posts.filter((p) => p.pinned)));
@@ -55,7 +67,7 @@ export function Home({
           />
           <div className="px-4 space-y-3">
             {pinned.map((p) => (
-              <PinnedPostCard key={p.id} post={p} onOpen={setSelected} />
+              <PinnedPostCard key={p.id} post={p} onOpen={openPost} />
             ))}
           </div>
         </>
@@ -161,7 +173,7 @@ export function Home({
         ))}
       </div>
 
-      <PostDetailSheet post={selected} open={!!selected} onClose={() => setSelected(null)} />
+      <PostDetailSheet post={selected} open={!!selected} onClose={closeDetail} />
     </div>
   );
 }

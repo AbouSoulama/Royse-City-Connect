@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useNavigation } from '../contexts/NavigationContext';
+import { resolveFeedItem } from '../lib/share';
 import { useT, TKey } from '../i18n';
 import { Post, PostCategory, FeedCategory, categoryEmoji, cities } from '../data';
 import { ModalSheet, Page } from '../components/Layout';
@@ -28,11 +30,16 @@ const catFilters: { key: NewsFilter; tkey: TKey }[] = [
 
 export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void }) {
   const { t } = useT();
+  const { detail, openDetail, closeDetail } = useNavigation();
   const [filter, setFilter] = useState<NewsFilter>('all');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<Post | null>(null);
   const [postOpen, setPostOpen] = useState(false);
+
+  const selected = detail?.type === 'post' ? posts.find((p) => {
+    const { itemId } = resolveFeedItem(p);
+    return itemId === detail.id || p.id === detail.id;
+  }) ?? null : null;
 
   const load = () => {
     setLoading(true);
@@ -49,9 +56,14 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
     return getFeedCategory(p) === filter;
   });
 
+  const openPost = (post: Post) => {
+    const { itemId } = resolveFeedItem(post);
+    openDetail({ type: 'post', id: itemId });
+  };
+
   const handleOpenLink = (post: Post) => {
     if (!goTo || !post.linkPage) return;
-    setSelected(null);
+    closeDetail();
     goTo(post.linkPage);
   };
 
@@ -89,7 +101,7 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
       <div className="px-4 pt-4 space-y-3">
         {loading && <div className="text-center text-sm text-slate-400 py-8">Loading…</div>}
         {!loading && filtered.map((p) => (
-          <PostCard key={p.id} post={p} onOpen={setSelected} />
+          <PostCard key={p.id} post={p} onOpen={openPost} />
         ))}
         {!loading && filtered.length === 0 && (
           <div className="text-center text-sm text-slate-400 py-8">— No posts in this category —</div>
@@ -99,7 +111,7 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
       <PostDetailSheet
         post={selected}
         open={!!selected}
-        onClose={() => setSelected(null)}
+        onClose={closeDetail}
         onOpenLink={goTo ? handleOpenLink : undefined}
       />
 

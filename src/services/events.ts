@@ -201,3 +201,9 @@ export async function toggleEventFeatured(
   const { error } = await getSupabase().from('events').update({ featured }).eq('id', eventId);
   return error ? { error: error.message } : {};
 }
+
+export async function deleteEvent(eventId: string): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
+  const { error } = await getSupabase().from('events').delete().eq('id', eventId);
+  return error ? { error: error.message } : {};
+}

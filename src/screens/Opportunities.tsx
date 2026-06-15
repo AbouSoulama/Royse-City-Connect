@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useT } from '../i18n';
 import { Job } from '../data';
 import { ModalSheet } from '../components/Layout';
@@ -17,12 +18,14 @@ const typeColors: Record<Job['type'], string> = {
 
 export function Opportunities({ user }: { user: AuthUser }) {
   const { t, lang } = useT();
+  const { detail, openDetail, closeDetail } = useNavigation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [type, setType] = useState<Job['type'] | null>(null);
-  const [selected, setSelected] = useState<Job | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
+
+  const selected = detail?.type === 'job' ? jobs.find((j) => j.id === detail.id) ?? null : null;
 
   const load = () => {
     setLoading(true);
@@ -42,7 +45,7 @@ export function Opportunities({ user }: { user: AuthUser }) {
     return true;
   }), [jobs, search, type]);
 
-  if (selected) return <JobDetail job={selected} onBack={() => setSelected(null)} />;
+  if (selected) return <JobDetail job={selected} onBack={closeDetail} />;
 
   return (
     <div className="pb-4">
@@ -90,7 +93,7 @@ export function Opportunities({ user }: { user: AuthUser }) {
         {!loading && filtered.map((j) => (
           <button
             key={j.id}
-            onClick={() => setSelected(j)}
+            onClick={() => openDetail({ type: 'job', id: j.id })}
             className="w-full text-left bg-white rounded-2xl border border-slate-100 shadow-sm p-4 active:scale-[0.99] transition"
           >
             <div className="flex items-start gap-3">

@@ -205,3 +205,9 @@ export async function toggleBusinessVerified(
 
   return error ? { error: error.message } : {};
 }
+
+export async function deleteBusiness(businessId: string): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured) return { error: 'Supabase not configured' };
+  const { error } = await getSupabase().from('businesses').delete().eq('id', businessId);
+  return error ? { error: error.message } : {};
+}
