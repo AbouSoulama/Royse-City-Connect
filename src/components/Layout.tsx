@@ -17,10 +17,12 @@ interface PhoneShellProps {
   unreadCount: number;
   hideNav?: boolean;
   hideHeader?: boolean;
+  /** Full-bleed screens (welcome, auth) — no slate background, child fills area */
+  fillScreen?: boolean;
 }
 
 export function PhoneShell({
-  children, page, setPage, onOpenNotifs, onOpenProfile, unreadCount, hideNav, hideHeader,
+  children, page, setPage, onOpenNotifs, onOpenProfile, unreadCount, hideNav, hideHeader, fillScreen,
 }: PhoneShellProps) {
   const { lang, setLang, t } = useT();
   const [langOpen, setLangOpen] = useState(false);
@@ -81,7 +83,7 @@ export function PhoneShell({
           </header>
         )}
 
-        <main className="flex-1 overflow-y-auto phone-scroll bg-slate-50 min-h-0">
+        <main className={`flex-1 min-h-0 ${fillScreen ? 'overflow-hidden relative' : 'overflow-y-auto phone-scroll bg-slate-50'}`}>
           {children}
         </main>
 

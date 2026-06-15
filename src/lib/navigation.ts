@@ -45,6 +45,11 @@ export function pushAppState(state: AppHistoryState, replace = false) {
 }
 
 export function parseAppHash(): Partial<AppHistoryState> {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('code') || params.has('access_token')) {
+    return { stage: 'app', page: 'home' };
+  }
+
   const hash = window.location.hash.replace(/^#/, '') || 'welcome';
   const recovery = window.location.pathname === '/recovery';
 

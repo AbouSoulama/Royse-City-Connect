@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useT } from '../i18n';
-import { MapPin, ChevronLeft, ChevronRight } from './Icons';
+import { MapPin, ChevronLeft, ChevronRight, StoreIcon, CalIcon, BriefIcon } from './Icons';
 import type { Page } from './Layout';
 
 export interface HeroSlide {
@@ -132,22 +132,25 @@ export function HomeHero({
       )}
 
       <div className="grid grid-cols-3 gap-2 mt-4">
-        <QuickAction emoji="🏪" label={t('businesses')} onClick={() => onNavigate('businesses')} />
-        <QuickAction emoji="📅" label={t('events')} onClick={() => onNavigate('events')} />
-        <QuickAction emoji="💼" label={t('opportunities')} onClick={() => onNavigate('opportunities')} />
+        <QuickAction icon={<StoreIcon size={22} />} label={t('businesses')} onClick={() => onNavigate('businesses')} />
+        <QuickAction icon={<CalIcon size={22} />} label={t('events')} onClick={() => onNavigate('events')} />
+        <QuickAction icon={<BriefIcon size={22} />} label={t('opportunities')} onClick={() => onNavigate('opportunities')} />
       </div>
     </div>
   );
 }
 
-function QuickAction({ emoji, label, onClick }: { emoji: string; label: string; onClick: () => void }) {
+function QuickAction({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="bg-white/10 backdrop-blur hover:bg-white/15 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-1 active:scale-95 transition"
+      className="bg-white/10 backdrop-blur hover:bg-white/15 border border-white/15 rounded-2xl p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
     >
-      <span className="text-2xl">{emoji}</span>
-      <span className="text-[10px] font-bold text-white">{label}</span>
+      <span className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-white">
+        {icon}
+      </span>
+      <span className="text-[10px] font-bold text-white leading-tight text-center">{label}</span>
     </button>
   );
 }
@@ -162,7 +165,7 @@ export function useHeroSlides(): HeroSlide[] {
       subtitle: t('heroSlide1Subtitle'),
       description: t('heroSlide1Desc'),
       cta: t('heroCta'),
-      gradient: 'from-orange-500 via-orange-600 to-amber-600',
+      gradient: 'from-navy via-navy-light to-navy-dark',
       decor: 'opacity-40',
       page: 'news',
     },
@@ -173,7 +176,7 @@ export function useHeroSlides(): HeroSlide[] {
       subtitle: t('heroSlide2Subtitle'),
       description: t('heroSlide2Desc'),
       cta: t('heroCtaBiz'),
-      gradient: 'from-crimson via-crimson-dark to-rose-800',
+      gradient: 'from-crimson via-crimson-dark to-rose-900',
       decor: 'opacity-30',
       page: 'businesses',
     },
@@ -183,7 +186,7 @@ export function useHeroSlides(): HeroSlide[] {
       subtitle: t('heroSlide3Subtitle'),
       description: t('heroSlide3Desc'),
       cta: t('heroCtaEvents'),
-      gradient: 'from-teal-600 via-emerald-700 to-navy',
+      gradient: 'from-navy-dark via-navy to-crimson-dark',
       decor: 'opacity-25',
       page: 'events',
     },
@@ -193,7 +196,7 @@ export function useHeroSlides(): HeroSlide[] {
       subtitle: t('heroSlide4Subtitle'),
       description: t('heroSlide4Desc'),
       cta: t('heroCtaJobs'),
-      gradient: 'from-violet-600 via-indigo-700 to-navy-dark',
+      gradient: 'from-crimson-dark via-navy to-navy-dark',
       decor: 'opacity-30',
       page: 'opportunities',
     },

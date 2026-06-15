@@ -93,9 +93,13 @@ function cleanOAuthUrl() {
     url.hash = '#home';
     dirty = true;
   }
+  if (dirty || !url.hash || url.hash === '#welcome' || url.hash === '#') {
+    url.hash = '#home';
+    dirty = true;
+  }
   if (dirty) {
     const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '') + url.hash;
-    window.history.replaceState(window.history.state, document.title, clean || '/#home');
+    window.history.replaceState({ stage: 'app', page: 'home', overlay: 'none', detail: null }, document.title, clean);
   }
 }
 
@@ -145,40 +149,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase();
     let mounted = true;
 
-    const finishLoading = () => {
-      if (mounted) {
-        setLoading(false);
-        setOauthCompleting(false);
+    const oauthFlow = isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1';
+
+    const finishLoading = (force = false) => {
+      if (!mounted) return;
+      if (!force && oauthFlow && !authError) {
+        // Keep spinner until profile is loaded or OAuth fails
+        return;
       }
+      setLoading(false);
+      setOauthCompleting(false);
     };
 
-    const timeout = window.setTimeout(finishLoading, AUTH_INIT_TIMEOUT_MS);
+    const timeout = window.setTimeout(() => finishLoading(true), AUTH_INIT_TIMEOUT_MS);
+
+    const handleSession = async (authUser: User, event: string) => {
+      await loadProfile(authUser);
+      if (!mounted) return;
+      sessionStorage.removeItem(OAUTH_PENDING_KEY);
+      setOauthCompleting(false);
+      setAuthError(null);
+      setLoading(false);
+      if (event === 'SIGNED_IN' || isOAuthCallback()) {
+        cleanOAuthUrl();
+      }
+      window.clearTimeout(timeout);
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
       if (session?.user) {
-        void loadProfile(session.user).then(() => {
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-            sessionStorage.removeItem(OAUTH_PENDING_KEY);
-            setOauthCompleting(false);
-            setAuthError(null);
-            if (event === 'SIGNED_IN' || isOAuthCallback()) {
-              cleanOAuthUrl();
-            }
-          }
-        });
+        void handleSession(session.user, event);
       } else if (!session) {
         const pending = sessionStorage.getItem(OAUTH_PENDING_KEY) === '1' || isOAuthCallback();
         if (pending && (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT')) {
           return;
         }
         setUser((prev) => (prev?.guest ? prev : null));
-      }
-
-      if (event === 'INITIAL_SESSION' && !isOAuthCallback() && sessionStorage.getItem(OAUTH_PENDING_KEY) !== '1') {
-        window.clearTimeout(timeout);
-        finishLoading();
+        if (event === 'INITIAL_SESSION' && !pending) {
+          window.clearTimeout(timeout);
+          finishLoading(true);
+        }
       }
     });
 
@@ -186,33 +198,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (isOAuthCallback()) {
           setOauthCompleting(true);
-          const code = new URLSearchParams(window.location.search).get('code');
-          if (code) {
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) {
-              console.error('[auth] OAuth code exchange failed:', error.message);
-              setAuthError(error.message);
-              sessionStorage.removeItem(OAUTH_PENDING_KEY);
-            }
+        }
+
+        // detectSessionInUrl exchanges ?code= — retry getSession while OAuth finishes
+        let session = null;
+        const attempts = isOAuthCallback() ? 8 : 1;
+        for (let i = 0; i < attempts; i++) {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) console.error('[auth] getSession:', error.message);
+          session = data.session;
+          if (session?.user) break;
+          if (isOAuthCallback() && i < attempts - 1) {
+            await new Promise((r) => setTimeout(r, 350));
           }
         }
 
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) console.error('[auth] getSession:', error.message);
-
         if (mounted && session?.user) {
-          await loadProfile(session.user);
-          sessionStorage.removeItem(OAUTH_PENDING_KEY);
-          cleanOAuthUrl();
-        } else if (mounted && isOAuthCallback() && !session) {
+          await handleSession(session.user, 'INITIAL_SESSION');
+        } else if (mounted && isOAuthCallback()) {
           setAuthError('Google sign-in could not be completed. Please try again.');
           sessionStorage.removeItem(OAUTH_PENDING_KEY);
+          setOauthCompleting(false);
+          setLoading(false);
+          window.clearTimeout(timeout);
+        } else if (mounted && oauthFlow && !isOAuthCallback()) {
+          sessionStorage.removeItem(OAUTH_PENDING_KEY);
+          finishLoading(true);
+        } else if (mounted && !oauthFlow) {
+          window.clearTimeout(timeout);
+          finishLoading(true);
         }
       } catch (e) {
         console.error('[auth] init failed:', e);
-      } finally {
-        window.clearTimeout(timeout);
-        finishLoading();
+        if (mounted) {
+          setOauthCompleting(false);
+          setLoading(false);
+        }
       }
     };
 
@@ -266,7 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'URL de redirection manquante. Configurez VITE_APP_URL et Supabase Site URL avec https://.' };
     }
 
-    const redirectTo = `${base.replace(/\/$/, '')}/`;
+    const redirectTo = `${base.replace(/\/$/, '')}/#home`;
     sessionStorage.setItem(OAUTH_PENDING_KEY, '1');
 
     const { error } = await getSupabase().auth.signInWithOAuth({

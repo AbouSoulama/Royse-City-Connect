@@ -47,7 +47,7 @@ export function Home({
   }, []);
 
   return (
-    <div className="pb-4 overflow-x-hidden">
+    <div className="pb-4">
       <HomeHero
         userName={user.name.split(' ')[0]}
         city={user.city}
@@ -100,7 +100,7 @@ export function Home({
           </button>
         }
       />
-      <div className="overflow-x-auto phone-scroll overscroll-x-contain touch-pan-x pb-1">
+      <div className="overflow-x-auto phone-scroll overscroll-x-contain touch-scroll-x pb-1">
         <div className="flex gap-3 px-4 w-max max-w-full">
           {upcoming.map((e) => (
             <button

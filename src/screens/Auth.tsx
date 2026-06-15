@@ -141,7 +141,10 @@ export function Auth({
     view === 'signin' ? t('signInSubtitle') : t('signUpSubtitle');
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-navy via-navy-dark to-[#15294A] flex flex-col">
+    <div
+      className="absolute inset-0 flex flex-col overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #1E3A5F 0%, #15294A 100%)' }}
+    >
       <div className="relative px-5 pt-6 pb-16 text-center">
         {onBack && view !== 'recovery' && (
           <button
@@ -167,7 +170,7 @@ export function Auth({
         <p className="text-white font-extrabold text-lg">{t('appName')}</p>
       </div>
 
-      <div className="flex-1 bg-white rounded-t-[2rem] -mt-6 px-6 pt-8 pb-8 shadow-2xl animate-slide-up overflow-y-auto phone-scroll">
+      <div className="flex-1 min-h-0 bg-white rounded-t-[2rem] -mt-6 px-6 pt-8 pb-8 shadow-2xl animate-slide-up overflow-y-auto phone-scroll overscroll-y-contain">
         <h2 className="text-2xl font-extrabold text-navy">{title}</h2>
         <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
 

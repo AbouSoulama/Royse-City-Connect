@@ -101,6 +101,7 @@ function AppContent() {
     unreadCount: 0,
     hideHeader: true as const,
     hideNav: true as const,
+    fillScreen: true as const,
   };
 
   return (
