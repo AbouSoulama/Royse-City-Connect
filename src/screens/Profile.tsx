@@ -118,8 +118,8 @@ export function Profile({
   const displayEmail = settings.showEmail ? user.email : null;
 
   return (
-    <div className="pb-4 bg-slate-50">
-      <div className="bg-gradient-to-br from-navy via-navy-dark to-navy-light text-white px-4 pt-4 pb-8 rounded-b-3xl relative">
+    <div className="pb-4 bg-slate-50 min-w-0 overflow-x-clip">
+      <div className="bg-gradient-to-br from-navy via-navy-dark to-navy-light text-white px-4 pt-4 pb-8 rounded-b-3xl relative overflow-hidden">
         <button onClick={onBack} className="absolute top-4 left-4 p-2 rounded-full bg-white/15 z-10">
           <ChevronLeft size={20} />
         </button>
@@ -136,8 +136,8 @@ export function Profile({
             )}
           </button>
           <p className="text-[10px] text-white/60 mt-2">{t('editProfile')}</p>
-          <h1 className="text-lg font-extrabold mt-2">{user.name}</h1>
-          <div className="text-white/70 text-xs mt-0.5 flex items-center justify-center gap-1.5 flex-wrap">
+          <h1 className="text-lg font-extrabold mt-2 break-words px-2">{user.name}</h1>
+          <div className="text-white/70 text-xs mt-0.5 flex items-center justify-center gap-1.5 flex-wrap px-2">
             {displayPhone && <span>{displayPhone}</span>}
             {displayPhone && displayEmail && <span>•</span>}
             {displayEmail && <span>{displayEmail}</span>}
@@ -146,18 +146,18 @@ export function Profile({
             )}
             {user.guest && <span>Guest</span>}
           </div>
-          <div className="mt-3 inline-flex items-center gap-1 bg-white/10 backdrop-blur px-3 py-1 rounded-full">
-            <span className="text-[10px] font-bold uppercase text-crimson-light">
+          <div className="mt-3 inline-flex items-center gap-1 bg-white/10 backdrop-blur px-3 py-1 rounded-full max-w-full">
+            <span className="text-[10px] font-bold uppercase text-crimson-light truncate">
               {user.role === 'admin' ? '🛡️ Admin' : user.role === 'business' ? '🏪 Business' : '👤 Member'}
             </span>
-            <span className="text-white/40">•</span>
-            <span className="text-[10px] font-bold">{user.city}</span>
+            <span className="text-white/40 shrink-0">•</span>
+            <span className="text-[10px] font-bold truncate">{user.city}</span>
           </div>
         </div>
       </div>
 
       <div className="px-4 -mt-5 relative z-20">
-        <div className="bg-white rounded-2xl shadow-md border border-slate-100 grid grid-cols-4 divide-x divide-slate-100">
+        <div className="bg-white rounded-2xl shadow-md border border-slate-100 grid grid-cols-4 divide-x divide-slate-100 min-w-0">
           <TabBtn label={t('posts')} value={String(stats.posts)} active={tab === 'posts'} onClick={() => setTab('posts')} />
           <TabBtn label={t('eventsLabel')} value={String(stats.events)} active={tab === 'events'} onClick={() => setTab('events')} />
           <TabBtn label="Saved" value={String(savedTotal)} active={tab === 'saved'} onClick={() => setTab('saved')} />
@@ -403,9 +403,9 @@ export function Profile({
 
 function TabBtn({ label, value, active, onClick }: { label: string; value: string; active: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`py-3 text-center transition-colors ${active ? 'bg-navy/5' : 'hover:bg-slate-50'}`}>
-      <div className={`text-lg font-extrabold ${active ? 'text-navy' : 'text-navy/80'}`}>{value}</div>
-      <div className={`text-[9px] uppercase font-bold tracking-wide ${active ? 'text-crimson' : 'text-slate-500'}`}>{label}</div>
+    <button onClick={onClick} className={`py-2.5 px-0.5 text-center transition-colors min-w-0 ${active ? 'bg-navy/5' : 'hover:bg-slate-50'}`}>
+      <div className={`text-base font-extrabold truncate ${active ? 'text-navy' : 'text-navy/80'}`}>{value}</div>
+      <div className={`text-[8px] uppercase font-bold tracking-wide line-clamp-2 leading-tight ${active ? 'text-crimson' : 'text-slate-500'}`}>{label}</div>
     </button>
   );
 }
@@ -457,7 +457,7 @@ function Item({ icon, label, value, onClick, highlight }: {
       <div className={`w-9 h-9 rounded-xl ${highlight ? 'bg-crimson/10 text-crimson' : 'bg-slate-100 text-navy'} flex items-center justify-center`}>
         {icon}
       </div>
-      <span className={`flex-1 text-sm font-semibold text-left ${highlight ? 'text-crimson' : 'text-navy'}`}>{label}</span>
+      <span className={`flex-1 text-sm font-semibold text-left min-w-0 truncate ${highlight ? 'text-crimson' : 'text-navy'}`}>{label}</span>
       {value && <span className="text-xs text-slate-400 font-medium">{value}</span>}
       <ChevronRight size={16} className="text-slate-300" />
     </button>

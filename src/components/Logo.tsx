@@ -39,7 +39,7 @@ export function LogoHeader({ height = 36 }: { height?: number }) {
       alt="Royse City Connect"
       {...imgProps}
       className="object-contain object-left img-crisp"
-      style={{ height, width: 'auto', maxWidth: 168 }}
+      style={{ height, width: 'auto', maxWidth: 'min(140px, 38vw)' }}
     />
   );
 }

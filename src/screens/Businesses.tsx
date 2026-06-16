@@ -46,8 +46,8 @@ export function Businesses({ user }: { user: AuthUser }) {
   }
 
   return (
-    <div className="pb-4">
-      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100">
+    <div className="pb-4 min-w-0 overflow-x-clip">
+      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100 overflow-x-clip">
         <h1 className="text-xl font-extrabold text-navy">{t('businesses')}</h1>
         <p className="text-xs text-slate-500">{filtered.length} African-owned businesses</p>
 
@@ -61,7 +61,7 @@ export function Businesses({ user }: { user: AuthUser }) {
           />
         </div>
 
-        <div className="flex gap-2 mt-3 overflow-x-auto phone-scroll -mx-4 px-4">
+        <div className="flex gap-2 mt-3 overflow-x-auto phone-scroll overscroll-x-contain -mx-4 px-4">
           <FilterChip
             active={!cat && !city}
             onClick={() => { setCat(null); setCity(null); }}
@@ -72,7 +72,7 @@ export function Businesses({ user }: { user: AuthUser }) {
             <FilterChip key={c} active={cat === c} onClick={() => setCat(cat === c ? null : c)} label={c} />
           ))}
         </div>
-        <div className="flex gap-2 mt-2 overflow-x-auto phone-scroll -mx-4 px-4">
+        <div className="flex gap-2 mt-2 overflow-x-auto phone-scroll overscroll-x-contain -mx-4 px-4">
           {cities.slice(0, 5).map((c) => (
             <FilterChip
               key={c}
@@ -100,18 +100,18 @@ export function Businesses({ user }: { user: AuthUser }) {
               {b.emoji}
             </div>
             <div className="flex-1 p-3 min-w-0">
-              <div className="flex items-center gap-1">
-                <h3 className="font-bold text-navy text-sm truncate">{b.name}</h3>
+              <div className="flex items-center gap-1 min-w-0">
+                <h3 className="font-bold text-navy text-sm truncate min-w-0">{b.name}</h3>
                 {b.verified && <CheckCircle size={14} className="text-crimson shrink-0" />}
                 {b.featured && <span className="text-[9px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">⭐</span>}
               </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">{b.category} • {b.city}</div>
+              <div className="text-[11px] text-slate-500 mt-0.5 truncate">{b.category} • {b.city}</div>
               <p className="text-xs text-slate-600 mt-1 line-clamp-2">{b.description}</p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="flex items-center gap-0.5 text-[11px] text-amber-600 font-bold">
+              <div className="flex items-center gap-2 mt-1.5 min-w-0 flex-wrap">
+                <span className="flex items-center gap-0.5 text-[11px] text-amber-600 font-bold shrink-0">
                   <StarIcon size={12} /> {b.rating}
                 </span>
-                <span className="text-[11px] text-slate-400">• {t('owner')}: {b.owner.split(' ')[0]}</span>
+                <span className="text-[11px] text-slate-400 truncate min-w-0">• {t('owner')}: {b.owner.split(' ')[0]}</span>
               </div>
             </div>
           </button>
@@ -315,10 +315,10 @@ function BusinessDetail({ business, onBack }: { business: Business; onBack: () =
 
       <div className="p-4 -mt-6 relative">
         <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100">
-          <div className="flex items-start gap-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h1 className="text-lg font-extrabold text-navy">{business.name}</h1>
+          <div className="flex items-start gap-2 min-w-0">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                <h1 className="text-lg font-extrabold text-navy break-words">{business.name}</h1>
                 {business.verified && (
                   <span className="flex items-center gap-1 bg-crimson/10 text-crimson text-[10px] font-bold px-2 py-0.5 rounded-full">
                     <CheckCircle size={11} /> {t('verified')}
@@ -334,18 +334,18 @@ function BusinessDetail({ business, onBack }: { business: Business; onBack: () =
           </div>
           <p className="text-sm text-slate-600 mt-3 leading-relaxed">{business.description}</p>
 
-          <div className="grid grid-cols-3 gap-2 mt-4">
-            <a href={`tel:${business.phone}`} className="bg-navy text-white rounded-xl py-2.5 flex flex-col items-center gap-0.5">
+          <div className="grid grid-cols-3 gap-2 mt-4 min-w-0">
+            <a href={`tel:${business.phone}`} className="bg-navy text-white rounded-xl py-2.5 flex flex-col items-center gap-0.5 min-w-0 px-1">
               <PhoneIcon size={16} />
-              <span className="text-[10px] font-bold">{t('callNow')}</span>
+              <span className="text-[9px] font-bold text-center leading-tight">{t('callNow')}</span>
             </a>
-            <a href={`https://wa.me/${business.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="bg-emerald-600 text-white rounded-xl py-2.5 flex flex-col items-center gap-0.5">
+            <a href={`https://wa.me/${business.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="bg-emerald-600 text-white rounded-xl py-2.5 flex flex-col items-center gap-0.5 min-w-0 px-1">
               <span className="text-lg leading-none">💬</span>
-              <span className="text-[10px] font-bold">{t('whatsapp')}</span>
+              <span className="text-[9px] font-bold text-center leading-tight">{t('whatsapp')}</span>
             </a>
-            <button className="bg-slate-100 text-navy rounded-xl py-2.5 flex flex-col items-center gap-0.5">
+            <button className="bg-slate-100 text-navy rounded-xl py-2.5 flex flex-col items-center gap-0.5 min-w-0 px-1">
               <MapPin size={16} />
-              <span className="text-[10px] font-bold">{t('directions')}</span>
+              <span className="text-[9px] font-bold text-center leading-tight">{t('directions')}</span>
             </button>
           </div>
         </div>
@@ -370,9 +370,9 @@ function BusinessDetail({ business, onBack }: { business: Business; onBack: () =
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-slate-500 font-semibold">{label}</span>
-      <span className="text-xs text-navy font-medium text-right">{value}</span>
+    <div className="flex items-start justify-between gap-3 min-w-0">
+      <span className="text-xs text-slate-500 font-semibold shrink-0">{label}</span>
+      <span className="text-xs text-navy font-medium text-right break-words min-w-0">{value}</span>
     </div>
   );
 }

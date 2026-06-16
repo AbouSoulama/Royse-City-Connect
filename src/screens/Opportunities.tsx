@@ -48,8 +48,8 @@ export function Opportunities({ user }: { user: AuthUser }) {
   if (selected) return <JobDetail job={selected} onBack={closeDetail} />;
 
   return (
-    <div className="pb-4">
-      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100">
+    <div className="pb-4 min-w-0 overflow-x-clip">
+      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100 overflow-x-clip">
         <h1 className="text-xl font-extrabold text-navy">{t('opportunities')}</h1>
         <p className="text-xs text-slate-500">{filtered.length} jobs and opportunities</p>
 
@@ -63,7 +63,7 @@ export function Opportunities({ user }: { user: AuthUser }) {
           />
         </div>
 
-        <div className="flex gap-2 mt-3 overflow-x-auto phone-scroll -mx-4 px-4">
+        <div className="flex gap-2 mt-3 overflow-x-auto phone-scroll overscroll-x-contain -mx-4 px-4">
           {(['Full-time', 'Part-time', 'Contract', 'Volunteer'] as Job['type'][]).map((tp) => (
             <button
               key={tp}
@@ -101,11 +101,11 @@ export function Opportunities({ user }: { user: AuthUser }) {
                 <BriefIcon size={20} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-navy text-sm leading-tight">{j.title}</h3>
+                <h3 className="font-bold text-navy text-sm leading-tight break-words">{j.title}</h3>
                 <div className="text-xs text-slate-500 mt-0.5">{j.postedBy}</div>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${typeColors[j.type]}`}>{j.type}</span>
-                  <span className="text-[11px] text-slate-500 flex items-center gap-0.5"><MapPin size={11} />{j.location}</span>
+                  <span className="text-[11px] text-slate-500 flex items-center gap-0.5 min-w-0 truncate"><MapPin size={11} className="shrink-0" />{j.location}</span>
                 </div>
                 <p className="text-xs text-slate-600 mt-2 line-clamp-2">{j.description}</p>
                 <div className="flex items-center justify-between mt-2">
@@ -247,12 +247,12 @@ function JobDetail({ job, onBack }: { job: Job; onBack: () => void }) {
           <div className="w-14 h-14 mx-auto rounded-2xl bg-white/10 flex items-center justify-center mb-2">
             <BriefIcon size={28} />
           </div>
-          <h1 className="text-xl font-extrabold">{job.title}</h1>
+          <h1 className="text-xl font-extrabold break-words px-2">{job.title}</h1>
           <p className="text-white/70 text-sm mt-0.5">{job.postedBy}</p>
         </div>
-        <div className="flex items-center gap-2 justify-center mt-3">
-          <span className="text-xs font-bold px-2 py-1 rounded-full bg-white text-navy">{job.type}</span>
-          <span className="text-xs text-white/80 flex items-center gap-1"><MapPin size={12} /> {job.location}</span>
+        <div className="flex items-center gap-2 justify-center mt-3 flex-wrap px-2">
+          <span className="text-xs font-bold px-2 py-1 rounded-full bg-white text-navy shrink-0">{job.type}</span>
+          <span className="text-xs text-white/80 flex items-center gap-1 min-w-0"><MapPin size={12} className="shrink-0" /> <span className="truncate">{job.location}</span></span>
         </div>
       </div>
 

@@ -36,8 +36,8 @@ export function PhoneShell({
         </div>
 
         {!hideHeader && (
-          <header className="shrink-0 bg-white border-b border-slate-100 px-3 pt-3 pb-2.5 flex items-center justify-between relative z-10 gap-2">
-            <button type="button" onClick={() => setPage('home')} className="flex items-center min-w-0 active:opacity-70">
+          <header className="shrink-0 bg-white border-b border-slate-100 px-3 pt-3 pb-2.5 flex items-center justify-between relative z-10 gap-1.5 min-w-0">
+            <button type="button" onClick={() => setPage('home')} className="flex items-center min-w-0 flex-1 max-w-[45%] active:opacity-70">
               <LogoHeader height={32} />
             </button>
 
@@ -85,7 +85,7 @@ export function PhoneShell({
         )}
 
         <main
-          className={`flex-1 min-h-0 flex flex-col ${
+          className={`flex-1 min-h-0 min-w-0 flex flex-col overflow-x-clip ${
             fillScreen ? 'overflow-hidden' : 'overflow-y-auto phone-scroll bg-slate-50'
           }`}
         >
@@ -93,7 +93,7 @@ export function PhoneShell({
         </main>
 
         {!hideNav && (
-          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-1 pt-2 pb-2 grid grid-cols-5 gap-0.5">
+          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-0.5 pt-1.5 pb-1.5 grid grid-cols-5 gap-0 min-w-0">
             <NavBtn icon={<HomeIcon size={20} />} label={t('home')} active={page === 'home'} onClick={() => setPage('home')} />
             <NavBtn icon={<NewsIcon size={20} />} label={t('news')} active={page === 'news'} onClick={() => setPage('news')} />
             <NavBtn icon={<StoreIcon size={20} />} label={t('businesses')} active={page === 'businesses'} onClick={() => setPage('businesses')} />
@@ -111,22 +111,22 @@ function NavBtn({ icon, label, active, onClick }: { icon: ReactNode; label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center gap-0.5 py-1 rounded-xl transition-all ${
+      className={`flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-xl transition-all min-w-0 w-full ${
         active ? 'text-crimson' : 'text-slate-400 hover:text-navy'
       }`}
     >
-      <div className={active ? 'scale-110' : ''}>{icon}</div>
-      <span className={`text-[9px] leading-tight text-center ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
-      {active && <span className="w-1 h-1 rounded-full bg-crimson -mt-0.5" />}
+      <div className={`shrink-0 ${active ? 'scale-110' : ''}`}>{icon}</div>
+      <span className={`text-[8px] leading-[1.1] text-center line-clamp-2 w-full ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
+      {active && <span className="w-1 h-1 rounded-full bg-crimson -mt-0.5 shrink-0" />}
     </button>
   );
 }
 
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-4 mt-5 mb-2">
-      <h2 className="text-base font-extrabold text-navy">{title}</h2>
-      {action}
+    <div className="flex items-center justify-between gap-2 px-4 mt-5 mb-2 min-w-0">
+      <h2 className="text-base font-extrabold text-navy min-w-0 flex-1 leading-snug">{title}</h2>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
@@ -148,10 +148,10 @@ export function ModalSheet({ open, onClose, title, children }: { open: boolean; 
   return (
     <div className="absolute inset-0 z-50 flex items-end animate-fade-in">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full bg-white rounded-t-3xl max-h-[85%] flex flex-col animate-slide-up">
-        <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
-          <h3 className="font-extrabold text-navy">{title}</h3>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500">
+      <div className="relative w-full bg-white rounded-t-3xl max-h-[85dvh] flex flex-col animate-slide-up overflow-hidden">
+        <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-100 shrink-0 min-w-0">
+          <h3 className="font-extrabold text-navy min-w-0 flex-1 truncate">{title}</h3>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 shrink-0">
             <XIcon size={20} />
           </button>
         </div>

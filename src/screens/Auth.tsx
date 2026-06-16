@@ -170,7 +170,7 @@ export function Auth({
         <p className="text-white font-extrabold text-lg">{t('appName')}</p>
       </div>
 
-      <div className="flex-1 min-h-0 bg-white rounded-t-[1.75rem] -mt-10 px-5 pt-7 pb-5 shadow-2xl overflow-y-auto phone-scroll">
+      <div className="flex-1 min-h-0 bg-white rounded-t-[1.75rem] -mt-10 px-4 sm:px-5 pt-7 pb-5 shadow-2xl overflow-y-auto phone-scroll min-w-0">
         <h2 className="text-2xl font-extrabold text-navy">{title}</h2>
         <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
 
@@ -369,7 +369,7 @@ function AuthField({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1.5 px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-navy outline-none text-sm text-slate-800"
+        className="w-full mt-1.5 px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-navy outline-none text-sm text-slate-800 min-w-0"
       />
     </label>
   );
@@ -383,14 +383,14 @@ function SocialBtn({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`w-full flex items-center justify-center gap-3 py-3 rounded-xl font-semibold text-sm border transition active:scale-[0.98] disabled:opacity-50 ${
+      className={`w-full flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-semibold text-sm border transition active:scale-[0.98] disabled:opacity-50 min-w-0 ${
         dark
           ? 'bg-black text-white border-black'
           : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
       }`}
     >
       {icon}
-      {label}
+      <span className="truncate">{label}</span>
     </button>
   );
 }
@@ -424,7 +424,7 @@ function RoleBtn({ label, emoji, active, onClick }: { label: string; emoji: stri
       }`}
     >
       <span className="text-xl">{emoji}</span>
-      <span className={`text-[10px] font-bold leading-tight text-center px-1 ${active ? 'text-crimson' : 'text-slate-500'}`}>
+      <span className={`text-[10px] font-bold leading-tight text-center px-1 line-clamp-2 ${active ? 'text-crimson' : 'text-slate-500'}`}>
         {label}
       </span>
     </button>

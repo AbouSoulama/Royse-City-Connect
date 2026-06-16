@@ -66,7 +66,7 @@ export function Events({ user }: { user: AuthUser }) {
   const featured = sorted.filter((e) => e.featured);
 
   return (
-    <div className="pb-4">
+    <div className="pb-4 min-w-0 overflow-x-clip">
       <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100">
         <h1 className="text-xl font-extrabold text-navy">{t('events')}</h1>
         <p className="text-xs text-slate-500">{sorted.length} community events</p>
@@ -88,9 +88,9 @@ export function Events({ user }: { user: AuthUser }) {
               <div className="text-[10px] font-bold text-crimson uppercase">
                 {fullDate(featured[0].date)} • {featured[0].time}
               </div>
-              <h3 className="font-extrabold text-navy mt-0.5">{featured[0].title}</h3>
-              <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
-                <MapPin size={12} /> {featured[0].location}
+              <h3 className="font-extrabold text-navy mt-0.5 line-clamp-2">{featured[0].title}</h3>
+              <div className="flex items-center gap-1 text-xs text-slate-500 mt-1 min-w-0">
+                <MapPin size={12} className="shrink-0" /> <span className="truncate">{featured[0].location}</span>
               </div>
               <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
                 <span className="text-emerald-600 font-bold">{featured[0].attendees}</span> attendees
@@ -122,9 +122,11 @@ export function Events({ user }: { user: AuthUser }) {
                 <MapPin size={11} /> <span className="truncate">{e.city}</span>
               </div>
               <p className="text-xs text-slate-600 mt-1 line-clamp-2">{e.description}</p>
-              <div className="flex items-center justify-between mt-1.5">
-                <span className="text-[11px] text-slate-400">{t('organizedBy')} <span className="font-semibold text-navy">{e.organizer}</span></span>
-                <span className="text-[11px] font-bold text-emerald-600">{e.attendees} going</span>
+              <div className="flex items-center justify-between mt-1.5 gap-2 min-w-0">
+                <span className="text-[11px] text-slate-400 min-w-0 truncate">
+                  {t('organizedBy')} <span className="font-semibold text-navy">{e.organizer}</span>
+                </span>
+                <span className="text-[11px] font-bold text-emerald-600 shrink-0 whitespace-nowrap">{e.attendees} going</span>
               </div>
             </div>
           </button>
@@ -260,7 +262,7 @@ function EventDetail({
       <div className="p-4 -mt-8 relative">
         <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100">
           <div className="text-[11px] font-bold text-crimson uppercase">{fullDate(event.date)} • {event.time}</div>
-          <h1 className="text-xl font-extrabold text-navy mt-1">{event.title}</h1>
+          <h1 className="text-xl font-extrabold text-navy mt-1 break-words">{event.title}</h1>
           <p className="text-sm text-slate-600 mt-2 leading-relaxed">{event.description}</p>
           <div className="mt-4 space-y-2">
             <InfoRow icon={<CalIcon size={16} />} label={t('when')} value={`${fullDate(event.date)} at ${event.time}`} />
@@ -269,18 +271,18 @@ function EventDetail({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-3">
+        <div className="grid grid-cols-2 gap-2 mt-3 min-w-0">
           <button
             onClick={canRsvp ? onRsvp : undefined}
             disabled={!canRsvp}
-            className={`py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1 disabled:opacity-50 ${
+            className={`py-3 px-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1 disabled:opacity-50 min-w-0 ${
               isGoing ? 'bg-emerald-600 text-white' : 'bg-crimson text-white'
             }`}
           >
             {isGoing ? <><CheckCircle size={16} /> {t('going')}</> : t('rsvp')}
           </button>
-          <button className="py-3 rounded-xl font-bold text-sm bg-slate-100 text-navy flex items-center justify-center gap-1">
-            <CalIcon size={16} /> {t('addToCalendar')}
+          <button className="py-3 px-2 rounded-xl font-bold text-xs bg-slate-100 text-navy flex items-center justify-center gap-1 min-w-0">
+            <CalIcon size={16} /> <span className="truncate">{t('addToCalendar')}</span>
           </button>
         </div>
 
@@ -306,9 +308,9 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
   return (
     <div className="flex items-start gap-3">
       <div className="w-8 h-8 rounded-lg bg-slate-100 text-navy flex items-center justify-center shrink-0">{icon}</div>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="text-[10px] font-bold text-slate-400 uppercase">{label}</div>
-        <div className="text-sm text-navy font-semibold">{value}</div>
+        <div className="text-sm text-navy font-semibold break-words">{value}</div>
       </div>
     </div>
   );

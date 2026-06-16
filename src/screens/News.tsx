@@ -68,21 +68,21 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
   };
 
   return (
-    <div className="pb-4">
-      <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-extrabold text-navy">{t('latestNews')}</h1>
+    <div className="pb-4 min-w-0 overflow-x-clip">
+      <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100 sticky top-0 z-10 overflow-x-clip">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-extrabold text-navy leading-tight">{t('latestNews')}</h1>
             <p className="text-xs text-slate-500">{filtered.length} items</p>
           </div>
           {!user.guest && user.id && (
-            <button onClick={() => setPostOpen(true)} className="flex items-center gap-1 bg-crimson text-white text-xs font-bold px-3 py-2 rounded-xl">
+            <button onClick={() => setPostOpen(true)} className="flex items-center gap-1 bg-crimson text-white text-xs font-bold px-3 py-2 rounded-xl shrink-0 whitespace-nowrap">
               <PlusIcon size={14} /> Post
             </button>
           )}
         </div>
-        <div className="overflow-x-auto phone-scroll overscroll-x-contain mt-3 pb-1">
-          <div className="flex gap-2 w-max px-0.5">
+        <div className="overflow-x-auto phone-scroll overscroll-x-contain mt-3 pb-1 -mx-4 px-4">
+          <div className="flex gap-2 w-max">
             {catFilters.map((f) => (
               <button
                 key={f.key}
