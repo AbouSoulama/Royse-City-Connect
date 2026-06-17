@@ -93,10 +93,11 @@ export function HomeHero({
           <img
             src={slide.image}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover img-content scale-105"
+            className="absolute inset-0 w-full h-full object-cover img-content"
             loading={index === 0 ? 'eager' : 'lazy'}
             decoding="async"
             fetchPriority={index === 0 ? 'high' : 'auto'}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
           <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient} opacity-80 mix-blend-multiply`} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />

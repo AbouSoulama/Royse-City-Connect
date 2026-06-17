@@ -35,7 +35,16 @@ function hashFor(state: AppHistoryState): string {
   return `#${state.page}`;
 }
 
+export function hasOAuthCallbackParams(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.has('code') || params.has('error') || params.has('access_token');
+}
+
 export function pushAppState(state: AppHistoryState, replace = false) {
+  // Never strip ?code= / OAuth params — AuthContext must read them first
+  if (hasOAuthCallbackParams()) return;
+
   const url = `${window.location.pathname}${hashFor(state)}`;
   if (replace) {
     window.history.replaceState(state, '', url);

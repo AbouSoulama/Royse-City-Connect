@@ -193,9 +193,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (isPendingOAuth()) setOauthCompleting(true);
 
-        // detectSessionInUrl exchanges ?code= automatically — do NOT call exchangeCodeForSession twice
+        const oauthCode = new URLSearchParams(window.location.search).get('code');
+        let lastError: string | null = readOAuthError();
+
+        if (oauthCode) {
+          const { error } = await supabase.auth.exchangeCodeForSession(oauthCode);
+          if (error) {
+            lastError = error.message;
+            console.error('[auth] exchangeCodeForSession:', error.message);
+          }
+        }
+
         const maxAttempts = isPendingOAuth() ? 25 : 2;
-        let lastError: string | null = null;
 
         for (let i = 0; i < maxAttempts; i++) {
           const { data: { session }, error } = await supabase.auth.getSession();
@@ -209,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
           }
           if (!isPendingOAuth()) break;
-          await new Promise((r) => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 400));
         }
 
         if (!mounted || sessionHandled.current) return;

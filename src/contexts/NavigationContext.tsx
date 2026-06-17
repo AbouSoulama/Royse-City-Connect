@@ -6,6 +6,7 @@ import {
   DetailView,
   Overlay,
   Stage,
+  hasOAuthCallbackParams,
   pageForDetailType,
   parseAppHash,
   pushAppState,
@@ -56,6 +57,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (hasOAuthCallbackParams()) return;
     pushAppState(state, true);
 
     const onPop = (event: PopStateEvent) => {

@@ -14,10 +14,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["logo.jpg", "logo.png", "robots.txt"],
+      includeAssets: ["logo.jpg", "logo.png", "robots.txt", "hero/*.jpg"],
       manifest: false,
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,txt,xml}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,txt,xml,jpg,jpeg,webp}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
@@ -29,20 +29,13 @@ export default defineConfig({
             handler: "NetworkOnly",
           },
           {
-            urlPattern: ({ request }) => request.mode === "navigate",
+            urlPattern: ({ request, url }) =>
+              request.mode === "navigate" && !url.searchParams.has('code'),
             handler: "NetworkFirst",
             options: {
               cacheName: "html-pages",
               networkTimeoutSeconds: 3,
               expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "hero-images",
-              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
           {

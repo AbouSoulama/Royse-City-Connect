@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Lang, LangContext, translations, TKey } from './i18n';
 import { AuthProvider, useAuth, isOAuthCallback } from './contexts/AuthContext';
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
+import { hasOAuthCallbackParams } from './lib/navigation';
 import { useNotifications } from './hooks/useNotifications';
 import { PhoneShell, ModalSheet, LoadingScreen } from './components/Layout';
 import { Welcome, Onboarding } from './screens/Onboarding';
@@ -62,7 +63,7 @@ function AppContent() {
   }, [loading, user, setStage, setPage]);
 
   useEffect(() => {
-    if (authError && !user && !loading && !oauthCompleting && !oauthPending) {
+    if (authError && !user && !loading && !oauthCompleting && !oauthPending && !hasOAuthCallbackParams()) {
       setAuthMode('signin');
       setStage('auth');
     }
@@ -76,6 +77,7 @@ function AppContent() {
   const showBootScreen =
     loading ||
     oauthCompleting ||
+    hasOAuthCallbackParams() ||
     (isOAuthCallback() && !user) ||
     (oauthPending && !user && !authError);
 

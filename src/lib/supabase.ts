@@ -40,9 +40,10 @@ export function getSupabase(): SupabaseClient {
     client = createClient(url!, anonKey!, {
       auth: {
         flowType: 'pkce',
-        detectSessionInUrl: true,
+        detectSessionInUrl: false,
         persistSession: true,
         autoRefreshToken: true,
+        storageKey: 'rc-auth',
       },
     });
   }
