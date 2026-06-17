@@ -48,8 +48,8 @@ export function Opportunities({ user }: { user: AuthUser }) {
   if (selected) return <JobDetail job={selected} onBack={closeDetail} />;
 
   return (
-    <div className="pb-4 min-w-0 overflow-x-clip">
-      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100 overflow-x-clip">
+    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100">
         <h1 className="text-xl font-extrabold text-navy">{t('opportunities')}</h1>
         <p className="text-xs text-slate-500">{filtered.length} jobs and opportunities</p>
 
@@ -63,7 +63,7 @@ export function Opportunities({ user }: { user: AuthUser }) {
           />
         </div>
 
-        <div className="flex gap-2 mt-3 overflow-x-auto phone-scroll overscroll-x-contain -mx-4 px-4">
+        <div className="scroll-row-x mt-3">
           {(['Full-time', 'Part-time', 'Contract', 'Volunteer'] as Job['type'][]).map((tp) => (
             <button
               key={tp}

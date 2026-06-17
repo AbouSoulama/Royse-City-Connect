@@ -28,8 +28,8 @@ export function PhoneShell({
   const [langOpen, setLangOpen] = useState(false);
 
   return (
-    <div className="app-viewport fixed inset-0 w-full overflow-hidden bg-white md:bg-slate-200 md:bg-pattern flex flex-col md:items-center md:justify-center md:p-6">
-      <div className="app-frame flex flex-col flex-1 min-h-0 w-full md:flex-none md:w-[420px] md:h-[min(860px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative overflow-hidden md:phone-glow">
+    <div className="app-viewport fixed inset-0 w-full max-w-full overflow-hidden bg-white md:bg-slate-200 md:bg-pattern flex flex-col md:items-center md:justify-center md:p-6">
+      <div className="app-frame flex flex-col flex-1 min-h-0 w-full max-w-full md:flex-none md:w-[420px] md:max-w-[420px] md:h-[min(860px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative md:phone-glow">
         <div className="hidden md:flex absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl z-50 items-end justify-center pb-1">
           <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
           <div className="w-12 h-1.5 rounded-full bg-slate-700" />
@@ -85,15 +85,15 @@ export function PhoneShell({
         )}
 
         <main
-          className={`flex-1 min-h-0 min-w-0 flex flex-col overflow-x-clip ${
-            fillScreen ? 'overflow-hidden' : 'overflow-y-auto phone-scroll bg-slate-50'
+          className={`flex flex-col ${
+            fillScreen ? 'flex-1 min-h-0 min-w-0 overflow-hidden' : 'app-scroll phone-scroll bg-slate-50'
           }`}
         >
           {children}
         </main>
 
         {!hideNav && (
-          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-0.5 pt-1.5 pb-1.5 grid grid-cols-5 gap-0 min-w-0">
+          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-0 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] grid grid-cols-5 gap-0 w-full max-w-full min-w-0">
             <NavBtn icon={<HomeIcon size={20} />} label={t('home')} active={page === 'home'} onClick={() => setPage('home')} />
             <NavBtn icon={<NewsIcon size={20} />} label={t('news')} active={page === 'news'} onClick={() => setPage('news')} />
             <NavBtn icon={<StoreIcon size={20} />} label={t('businesses')} active={page === 'businesses'} onClick={() => setPage('businesses')} />
@@ -124,9 +124,9 @@ function NavBtn({ icon, label, active, onClick }: { icon: ReactNode; label: stri
 
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-2 px-4 mt-5 mb-2 min-w-0">
-      <h2 className="text-base font-extrabold text-navy min-w-0 flex-1 leading-snug">{title}</h2>
-      {action && <div className="shrink-0">{action}</div>}
+    <div className="flex items-center gap-2 px-4 mt-5 mb-2 min-w-0 max-w-full">
+      <h2 className="text-sm font-extrabold text-navy min-w-0 flex-1 leading-snug truncate">{title}</h2>
+      {action && <div className="shrink-0 max-w-[38%]">{action}</div>}
     </div>
   );
 }

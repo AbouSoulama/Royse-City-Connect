@@ -34,7 +34,11 @@ function mergeState(prev: AppHistoryState, patch: Partial<AppHistoryState>): App
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppHistoryState>(() => {
+    const fromHistory = window.history.state as AppHistoryState | null;
     const fromHash = parseAppHash();
+    if (fromHistory?.stage === 'app' || fromHash.stage === 'app') {
+      return mergeState(DEFAULT_HISTORY, { ...fromHash, ...fromHistory });
+    }
     return mergeState(DEFAULT_HISTORY, fromHash);
   });
   const stateRef = useRef(state);

@@ -47,9 +47,14 @@ function AppContent() {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  const oauthPending =
+    sessionStorage.getItem('rc_oauth_pending') === '1' ||
+    sessionStorage.getItem('rc_oauth_return') === '1';
+
   // Utilisateur connecté → toujours l'app (évite retour welcome après Google OAuth)
   useEffect(() => {
     if (!loading && user && !user.guest) {
+      sessionStorage.removeItem('rc_oauth_return');
       setStage('app', true);
       setPage('home');
       touchLastSeen();
@@ -57,18 +62,22 @@ function AppContent() {
   }, [loading, user, setStage, setPage]);
 
   useEffect(() => {
-    if (authError && !user && !loading && !oauthCompleting) {
+    if (authError && !user && !loading && !oauthCompleting && !oauthPending) {
       setAuthMode('signin');
       setStage('auth');
     }
-  }, [authError, user, loading, oauthCompleting, setAuthMode, setStage]);
+  }, [authError, user, loading, oauthCompleting, oauthPending, setAuthMode, setStage]);
 
   const ctx = useMemo(
     () => ({ lang, setLang, t: (k: TKey) => translations[lang][k] }),
     [lang]
   );
 
-  const showBootScreen = loading || oauthCompleting || (isOAuthCallback() && !user);
+  const showBootScreen =
+    loading ||
+    oauthCompleting ||
+    (isOAuthCallback() && !user) ||
+    (oauthPending && !user && !authError);
 
   if (showBootScreen) {
     return (

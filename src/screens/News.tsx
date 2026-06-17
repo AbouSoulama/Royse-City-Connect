@@ -68,11 +68,11 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
   };
 
   return (
-    <div className="pb-4 min-w-0 overflow-x-clip">
-      <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100 sticky top-0 z-10 overflow-x-clip">
+    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+      <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100 sticky top-0 z-10">
         <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-extrabold text-navy leading-tight">{t('latestNews')}</h1>
+            <h1 className="text-xl font-extrabold text-navy leading-tight truncate">{t('latestNews')}</h1>
             <p className="text-xs text-slate-500">{filtered.length} items</p>
           </div>
           {!user.guest && user.id && (
@@ -81,9 +81,8 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
             </button>
           )}
         </div>
-        <div className="overflow-x-auto phone-scroll overscroll-x-contain mt-3 pb-1 -mx-4 px-4">
-          <div className="flex gap-2 w-max">
-            {catFilters.map((f) => (
+        <div className="scroll-row-x mt-3 pb-1">
+          {catFilters.map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
@@ -92,9 +91,8 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
                 }`}
               >
                 {t(f.tkey)}
-              </button>
-            ))}
-          </div>
+            </button>
+          ))}
         </div>
       </div>
 

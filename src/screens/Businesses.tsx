@@ -46,8 +46,8 @@ export function Businesses({ user }: { user: AuthUser }) {
   }
 
   return (
-    <div className="pb-4 min-w-0 overflow-x-clip">
-      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100 overflow-x-clip">
+    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100">
         <h1 className="text-xl font-extrabold text-navy">{t('businesses')}</h1>
         <p className="text-xs text-slate-500">{filtered.length} African-owned businesses</p>
 
@@ -61,7 +61,7 @@ export function Businesses({ user }: { user: AuthUser }) {
           />
         </div>
 
-        <div className="flex gap-2 mt-3 overflow-x-auto phone-scroll overscroll-x-contain -mx-4 px-4">
+        <div className="scroll-row-x mt-3">
           <FilterChip
             active={!cat && !city}
             onClick={() => { setCat(null); setCity(null); }}
@@ -72,7 +72,7 @@ export function Businesses({ user }: { user: AuthUser }) {
             <FilterChip key={c} active={cat === c} onClick={() => setCat(cat === c ? null : c)} label={c} />
           ))}
         </div>
-        <div className="flex gap-2 mt-2 overflow-x-auto phone-scroll overscroll-x-contain -mx-4 px-4">
+        <div className="scroll-row-x mt-2">
           {cities.slice(0, 5).map((c) => (
             <FilterChip
               key={c}

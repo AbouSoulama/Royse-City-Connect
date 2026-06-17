@@ -47,7 +47,7 @@ export function Home({
   }, []);
 
   return (
-    <div className="pb-4 min-w-0 overflow-x-clip">
+    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
       <HomeHero
         userName={user.name.split(' ')[0]}
         city={user.city}
@@ -60,7 +60,7 @@ export function Home({
           <SectionHeader
             title={t('importantAnnouncements')}
             action={
-              <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center">
+              <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center whitespace-nowrap">
                 {t('seeAll')} <ChevronRight size={14} />
               </button>
             }
@@ -76,7 +76,7 @@ export function Home({
       <SectionHeader
         title={t('latestNews')}
         action={
-          <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center">
+          <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center whitespace-nowrap">
             {t('seeAll')} <ChevronRight size={14} />
           </button>
         }
@@ -95,18 +95,17 @@ export function Home({
       <SectionHeader
         title={t('upcomingEvents')}
         action={
-          <button onClick={() => goTo('events')} className="text-xs font-bold text-crimson flex items-center">
+          <button onClick={() => goTo('events')} className="text-xs font-bold text-crimson flex items-center whitespace-nowrap">
             {t('seeAll')} <ChevronRight size={14} />
           </button>
         }
       />
-      <div className="overflow-x-auto phone-scroll overscroll-x-contain touch-scroll-x pb-1 -mx-4 px-4">
-        <div className="flex gap-3 w-max">
+      <div className="scroll-row-x gap-3 px-4 pb-1">
           {upcoming.map((e) => (
             <button
               key={e.id}
               onClick={() => goTo('events')}
-              className="shrink-0 w-[min(240px,calc(100vw-2.5rem))] rounded-2xl overflow-hidden shadow-md bg-white border border-slate-100 text-left active:scale-[0.98] transition snap-start"
+              className="shrink-0 w-[220px] rounded-2xl overflow-hidden shadow-md bg-white border border-slate-100 text-left active:scale-[0.98] transition snap-start"
             >
               <div className={`h-20 bg-gradient-to-br ${e.color} flex items-center justify-center text-4xl`}>
                 {e.emoji}
@@ -123,8 +122,6 @@ export function Home({
               </div>
             </button>
           ))}
-          <div className="shrink-0 w-1" aria-hidden />
-        </div>
       </div>
 
       <div className="px-4 mt-5">
@@ -147,7 +144,7 @@ export function Home({
       <SectionHeader
         title={t('featuredBusinesses')}
         action={
-          <button onClick={() => goTo('businesses')} className="text-xs font-bold text-crimson flex items-center">
+          <button onClick={() => goTo('businesses')} className="text-xs font-bold text-crimson flex items-center whitespace-nowrap">
             {t('seeAll')} <ChevronRight size={14} />
           </button>
         }
