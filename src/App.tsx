@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Lang, LangContext, translations, TKey } from './i18n';
 import { AuthProvider, useAuth, isOAuthCallback } from './contexts/AuthContext';
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
@@ -52,15 +52,23 @@ function AppContent() {
     sessionStorage.getItem('rc_oauth_pending') === '1' ||
     sessionStorage.getItem('rc_oauth_return') === '1';
 
-  // Utilisateur connecté → toujours l'app (évite retour welcome après Google OAuth)
+  const postLoginUserId = useRef<string | null>(null);
+
+  // Après connexion → app (admin → tableau de bord, autres → accueil)
   useEffect(() => {
-    if (!loading && user && !user.guest) {
+    if (!loading && user && !user.guest && user.id && postLoginUserId.current !== user.id) {
+      postLoginUserId.current = user.id;
       sessionStorage.removeItem('rc_oauth_return');
       setStage('app', true);
-      setPage('home');
+      if (user.role === 'admin') {
+        setOverlay('admin');
+      } else {
+        setPage('home');
+      }
       touchLastSeen();
     }
-  }, [loading, user, setStage, setPage]);
+    if (!user) postLoginUserId.current = null;
+  }, [loading, user, setStage, setPage, setOverlay]);
 
   useEffect(() => {
     if (authError && !user && !loading && !oauthCompleting && !oauthPending && !hasOAuthCallbackParams()) {
@@ -144,7 +152,7 @@ function AppContent() {
             initialMode={authMode}
             initialError={authError}
             onBack={() => setStage('welcome')}
-            onSuccess={() => { setStage('app', true); setPage('home'); }}
+            onSuccess={() => { setStage('app', true); }}
           />
         </PhoneShell>
       )}
