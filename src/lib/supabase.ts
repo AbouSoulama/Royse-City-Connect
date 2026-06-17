@@ -14,19 +14,18 @@ function toAbsoluteAppUrl(raw: string): string {
 
 /**
  * URL where Supabase redirects after Google OAuth.
- * Must match Supabase → Authentication → URL Configuration → Redirect URLs exactly.
+ * Always prefer the current browser origin so PKCE verifier matches the callback.
  */
 export function getAuthRedirectUrl(): string {
-  const fromEnv = import.meta.env.VITE_APP_URL as string | undefined;
-  if (fromEnv) return toAbsoluteAppUrl(fromEnv);
-
   if (typeof window !== 'undefined') {
     const { origin, hostname } = window.location;
-    // Never redirect to supabase.co (happens when Site URL is misconfigured)
     if (!hostname.includes('supabase.co') && origin.startsWith('http')) {
       return origin;
     }
   }
+
+  const fromEnv = import.meta.env.VITE_APP_URL as string | undefined;
+  if (fromEnv) return toAbsoluteAppUrl(fromEnv);
 
   return '';
 }

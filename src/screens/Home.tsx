@@ -84,11 +84,19 @@ export function Home({
       <div className="px-4">
         <button
           onClick={() => goTo('news')}
-          className="w-full bg-white rounded-2xl border border-slate-100 p-4 text-left shadow-sm active:scale-[0.99] transition"
+          className="w-full shine-card rounded-2xl p-4 text-left active:scale-[0.99] transition overflow-hidden relative"
         >
-          <div className="text-sm font-bold text-navy">📰 {t('latestNews')}</div>
-          <p className="text-xs text-slate-500 mt-1">Community news, alerts, church updates & more</p>
-          <div className="text-[10px] font-bold text-crimson mt-2">{t('seeAll')} →</div>
+          <div className="absolute inset-0 bg-gradient-to-br from-navy/5 to-crimson/5 pointer-events-none" />
+          <div className="relative flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-xl shrink-0 shadow-md">
+              📰
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-navy">{t('latestNews')}</div>
+              <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">Community news, alerts, church updates & more</p>
+            </div>
+            <ChevronRight size={18} className="text-crimson shrink-0" />
+          </div>
         </button>
       </div>
 
@@ -105,10 +113,18 @@ export function Home({
             <button
               key={e.id}
               onClick={() => goTo('events')}
-              className="shrink-0 w-[220px] rounded-2xl overflow-hidden shadow-md bg-white border border-slate-100 text-left active:scale-[0.98] transition snap-start"
+              className="shrink-0 w-[220px] rounded-2xl overflow-hidden shadow-md bg-white border border-slate-100 text-left active:scale-[0.98] transition snap-start shine-card"
             >
-              <div className={`h-20 bg-gradient-to-br ${e.color} flex items-center justify-center text-4xl`}>
-                {e.emoji}
+              <div className={`h-24 bg-gradient-to-br ${e.color} flex items-center justify-center text-4xl relative overflow-hidden`}>
+                {e.image ? (
+                  <>
+                    <img src={e.image} alt="" className="absolute inset-0 w-full h-full object-cover img-content" loading="lazy" />
+                    <div className="absolute inset-0 bg-black/25" />
+                    <span className="relative drop-shadow-lg">{e.emoji}</span>
+                  </>
+                ) : (
+                  e.emoji
+                )}
               </div>
               <div className="p-3">
                 <div className="text-[10px] font-bold text-crimson uppercase">
@@ -154,10 +170,18 @@ export function Home({
           <button
             key={b.id}
             onClick={() => goTo('businesses')}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden text-left active:scale-[0.98] transition"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden text-left active:scale-[0.98] transition shine-card"
           >
-            <div className={`h-20 bg-gradient-to-br ${b.color} flex items-center justify-center text-4xl`}>
-              {b.emoji}
+            <div className={`h-24 bg-gradient-to-br ${b.color} flex items-center justify-center text-4xl relative overflow-hidden`}>
+              {b.image ? (
+                <>
+                  <img src={b.image} alt="" className="absolute inset-0 w-full h-full object-cover img-content" loading="lazy" />
+                  <div className="absolute inset-0 bg-black/20" />
+                  <span className="relative drop-shadow-md">{b.emoji}</span>
+                </>
+              ) : (
+                b.emoji
+              )}
             </div>
             <div className="p-2.5">
               <div className="flex items-center gap-1">

@@ -29,7 +29,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const AUTH_INIT_TIMEOUT_MS = 20000;
+const AUTH_INIT_TIMEOUT_MS = 25000;
 const OAUTH_PENDING_KEY = 'rc_oauth_pending';
 const OAUTH_RETURN_KEY = 'rc_oauth_return';
 
@@ -100,17 +100,8 @@ function cleanOAuthUrl() {
   );
 }
 
-async function exchangeOAuthCode(supabase: ReturnType<typeof getSupabase>): Promise<boolean> {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  if (!code) return false;
-
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
-    console.error('[auth] exchangeCodeForSession:', error.message);
-    return false;
-  }
-  return true;
+function isPendingOAuth(): boolean {
+  return isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1';
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -167,6 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const handleSession = async (authUser: User) => {
+      if (sessionHandled.current) return;
+      sessionHandled.current = true;
       setOauthCompleting(true);
       await loadProfile(authUser);
       if (!mounted) return;
@@ -175,59 +168,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthError(null);
       setOauthCompleting(false);
       setLoading(false);
-      sessionHandled.current = true;
       if (isOAuthCallback()) cleanOAuthUrl();
     };
 
     const timeout = window.setTimeout(() => {
-      if (!sessionHandled.current) {
+      if (!sessionHandled.current && isPendingOAuth()) {
+        setAuthError('Google sign-in could not be completed. Please try again.');
         sessionStorage.removeItem(OAUTH_PENDING_KEY);
-        finishAuth();
       }
+      if (!sessionHandled.current) finishAuth();
     }, AUTH_INIT_TIMEOUT_MS);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
         void handleSession(session.user);
-      } else if (event === 'INITIAL_SESSION' && !session) {
-        const pendingOAuth = isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1';
-        if (!pendingOAuth) {
-          window.clearTimeout(timeout);
-          finishAuth();
-        }
+      } else if (event === 'INITIAL_SESSION' && !session && !isPendingOAuth()) {
+        window.clearTimeout(timeout);
+        finishAuth();
       }
     });
 
     const initAuth = async () => {
       try {
-        if (isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1') {
-          setOauthCompleting(true);
-        }
+        if (isPendingOAuth()) setOauthCompleting(true);
 
-        if (isOAuthCallback()) {
-          await exchangeOAuthCode(supabase);
-        }
+        // detectSessionInUrl exchanges ?code= automatically — do NOT call exchangeCodeForSession twice
+        const maxAttempts = isPendingOAuth() ? 25 : 2;
+        let lastError: string | null = null;
 
-        await new Promise((r) => setTimeout(r, 100));
-
-        const maxAttempts = isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1' ? 20 : 2;
         for (let i = 0; i < maxAttempts; i++) {
           const { data: { session }, error } = await supabase.auth.getSession();
-          if (error) console.error('[auth] getSession:', error.message);
+          if (error) {
+            lastError = error.message;
+            console.error('[auth] getSession:', error.message);
+          }
           if (session?.user) {
             await handleSession(session.user);
             window.clearTimeout(timeout);
             return;
           }
-          if (!isOAuthCallback() && sessionStorage.getItem(OAUTH_PENDING_KEY) !== '1') break;
-          await new Promise((r) => setTimeout(r, 400));
+          if (!isPendingOAuth()) break;
+          await new Promise((r) => setTimeout(r, 500));
         }
 
         if (!mounted || sessionHandled.current) return;
 
-        if (isOAuthCallback() || sessionStorage.getItem(OAUTH_PENDING_KEY) === '1') {
-          setAuthError('Google sign-in could not be completed. Please try again.');
+        if (isPendingOAuth()) {
+          const detail = lastError ? ` (${lastError})` : '';
+          setAuthError(`Google sign-in could not be completed. Please try again.${detail}`);
         }
         sessionStorage.removeItem(OAUTH_PENDING_KEY);
         window.clearTimeout(timeout);
@@ -297,6 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: 'google',
       options: {
         redirectTo,
+        skipBrowserRedirect: false,
         queryParams: { access_type: 'offline', prompt: 'select_account' },
       },
     });

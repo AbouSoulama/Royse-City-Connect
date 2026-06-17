@@ -22,12 +22,27 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
+            urlPattern: ({ url }) =>
+              url.searchParams.has('code') ||
+              url.searchParams.has('error') ||
+              url.searchParams.has('access_token'),
+            handler: "NetworkOnly",
+          },
+          {
             urlPattern: ({ request }) => request.mode === "navigate",
             handler: "NetworkFirst",
             options: {
               cacheName: "html-pages",
-              networkTimeoutSeconds: 8,
+              networkTimeoutSeconds: 3,
               expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "hero-images",
+              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
           {
