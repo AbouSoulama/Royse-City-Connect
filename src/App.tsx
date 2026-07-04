@@ -16,6 +16,7 @@ import { Profile } from './screens/Profile';
 import { NotificationsList } from './screens/Notifications';
 import { AdminDashboard } from './screens/Admin';
 import { FeedbackSheet } from './components/FeedbackSheet';
+import { InstallPrompt } from './components/InstallPrompt';
 import { touchLastSeen } from './services/admin';
 
 const LANG_KEY = 'rc_lang';
@@ -216,6 +217,7 @@ export default function App() {
     <AuthProvider>
       <NavigationProvider>
         <AppContent />
+        <InstallPrompt />
       </NavigationProvider>
     </AuthProvider>
   );

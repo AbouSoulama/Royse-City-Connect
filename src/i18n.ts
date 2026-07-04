@@ -224,6 +224,15 @@ export const translations = {
     feedbackDesign: 'Design',
     feedbackOther: 'Other',
     appReviews: 'App reviews',
+
+    // PWA Install
+    installTitle: 'Install Royse City Connect',
+    installDescAndroid: 'Add the app to your home screen for quick access — no App Store needed.',
+    installDescIOS: 'Install the app on your iPhone for a faster, native experience.',
+    installNow: 'Install now',
+    installLater: 'Not now',
+    installStep1IOS: 'Tap the Share button in Safari',
+    installStep2IOS: 'Select "Add to Home Screen"',
   },
   fr: {
     appName: 'Royse City Connect',
@@ -434,6 +443,15 @@ export const translations = {
     feedbackDesign: 'Design',
     feedbackOther: 'Autre',
     appReviews: 'Avis utilisateurs',
+
+    // PWA Install
+    installTitle: 'Installer Royse City Connect',
+    installDescAndroid: 'Ajoutez l\'app à votre écran d\'accueil — sans Play Store ni App Store.',
+    installDescIOS: 'Installez l\'app sur votre iPhone pour une expérience rapide et native.',
+    installNow: 'Installer maintenant',
+    installLater: 'Plus tard',
+    installStep1IOS: 'Appuyez sur Partager dans Safari',
+    installStep2IOS: 'Sélectionnez « Sur l\'écran d\'accueil »',
   },
 } as const;
 

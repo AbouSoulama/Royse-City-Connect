@@ -22,14 +22,14 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) =>
+            urlPattern: ({ url }: { url: URL }) =>
               url.searchParams.has('code') ||
               url.searchParams.has('error') ||
               url.searchParams.has('access_token'),
             handler: "NetworkOnly",
           },
           {
-            urlPattern: ({ request, url }) =>
+            urlPattern: ({ request, url }: { request: Request; url: URL }) =>
               request.mode === "navigate" && !url.searchParams.has('code'),
             handler: "NetworkFirst",
             options: {

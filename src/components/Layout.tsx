@@ -36,9 +36,9 @@ export function PhoneShell({
         </div>
 
         {!hideHeader && (
-          <header className="shrink-0 bg-white border-b border-slate-100 px-3 pt-3 pb-2.5 flex items-center justify-between relative z-10 gap-1.5 min-w-0">
-            <button type="button" onClick={() => setPage('home')} className="flex items-center min-w-0 flex-1 max-w-[45%] active:opacity-70">
-              <LogoHeader height={32} />
+          <header className="shrink-0 bg-white/97 border-b border-slate-100/80 px-3 pt-3 pb-2.5 flex items-center justify-between relative z-10 gap-1.5 min-w-0 shadow-[0_1px_12px_rgba(30,58,95,0.04)]">
+            <button type="button" onClick={() => setPage('home')} className="flex items-center min-w-0 flex-1 max-w-[45%] tap-scale">
+              <LogoHeader height={34} />
             </button>
 
             <div className="flex items-center gap-0.5 shrink-0">
@@ -46,7 +46,7 @@ export function PhoneShell({
                 <button
                   type="button"
                   onClick={() => setLangOpen(!langOpen)}
-                  className="flex items-center gap-0.5 px-2 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-navy text-xs font-bold"
+                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-navy text-xs font-extrabold"
                 >
                   <GlobeIcon size={14} />
                   <span className="uppercase">{lang}</span>
@@ -93,7 +93,7 @@ export function PhoneShell({
         </main>
 
         {!hideNav && (
-          <nav className="shrink-0 z-20 bg-white border-t border-slate-200 px-0 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] grid grid-cols-5 gap-0 w-full max-w-full min-w-0">
+          <nav className="shrink-0 z-20 nav-modern px-1 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] grid grid-cols-5 gap-0 w-full max-w-full min-w-0">
             <NavBtn icon={<HomeIcon size={20} />} label={t('home')} active={page === 'home'} onClick={() => setPage('home')} />
             <NavBtn icon={<NewsIcon size={20} />} label={t('news')} active={page === 'news'} onClick={() => setPage('news')} />
             <NavBtn icon={<StoreIcon size={20} />} label={t('businesses')} active={page === 'businesses'} onClick={() => setPage('businesses')} />
@@ -111,21 +111,20 @@ function NavBtn({ icon, label, active, onClick }: { icon: ReactNode; label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-xl transition-all min-w-0 w-full ${
+      className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-xl min-w-0 w-full tap-scale ${
         active ? 'text-crimson' : 'text-slate-400 hover:text-navy'
       }`}
     >
-      <div className={`shrink-0 ${active ? 'scale-110' : ''}`}>{icon}</div>
-      <span className={`text-[8px] leading-[1.1] text-center line-clamp-2 w-full ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
-      {active && <span className="w-1 h-1 rounded-full bg-crimson -mt-0.5 shrink-0" />}
+      <div className={`shrink-0 p-1 rounded-xl ${active ? 'nav-btn-active' : ''}`}>{icon}</div>
+      <span className={`text-[8px] leading-[1.1] text-center line-clamp-2 w-full ${active ? 'font-extrabold' : 'font-medium'}`}>{label}</span>
     </button>
   );
 }
 
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-4 mt-5 mb-2 min-w-0 max-w-full">
-      <h2 className="text-sm font-extrabold text-navy min-w-0 flex-1 leading-snug truncate">{title}</h2>
+    <div className="flex items-center gap-2 px-4 mt-6 mb-2.5 min-w-0 max-w-full">
+      <h2 className="text-sm font-black text-navy min-w-0 flex-1 leading-snug truncate section-accent">{title}</h2>
       {action && <div className="shrink-0 max-w-[38%]">{action}</div>}
     </div>
   );
