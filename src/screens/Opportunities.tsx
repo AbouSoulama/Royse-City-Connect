@@ -49,11 +49,11 @@ export function Opportunities({ user }: { user: AuthUser }) {
 
   return (
     <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
-      <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 border-b border-slate-100">
-        <h1 className="text-xl font-extrabold text-navy">{t('opportunities')}</h1>
-        <p className="text-xs text-slate-500">{filtered.length} jobs and opportunities</p>
+      <div className="page-header px-4 pt-4 pb-3 sticky top-0 z-10">
+        <h1 className="text-xl font-extrabold text-navy font-display tracking-tight">{t('opportunities')}</h1>
+        <p className="text-xs text-slate-500 mt-0.5">{filtered.length} jobs and opportunities</p>
 
-        <div className="mt-3 flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2.5">
+        <div className="mt-3 flex items-center gap-2 bg-navy/[0.05] rounded-2xl px-3.5 py-2.5 border border-navy/[0.04]">
           <SearchIcon size={18} className="text-slate-400" />
           <input
             value={search}
@@ -68,8 +68,8 @@ export function Opportunities({ user }: { user: AuthUser }) {
             <button
               key={tp}
               onClick={() => setType(type === tp ? null : tp)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-                type === tp ? 'bg-navy text-white' : 'bg-white text-slate-600 border border-slate-200'
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                type === tp ? 'chip-active' : 'bg-white text-slate-600 border border-navy/10'
               }`}
             >
               {tp}

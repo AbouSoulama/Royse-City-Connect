@@ -67,9 +67,9 @@ export function Events({ user }: { user: AuthUser }) {
 
   return (
     <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
-      <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100">
-        <h1 className="text-xl font-extrabold text-navy">{t('events')}</h1>
-        <p className="text-xs text-slate-500">{sorted.length} community events</p>
+      <div className="page-header px-4 pt-4 pb-3">
+        <h1 className="text-xl font-extrabold text-navy font-display tracking-tight">{t('events')}</h1>
+        <p className="text-xs text-slate-500 mt-0.5">{sorted.length} community events</p>
       </div>
 
       {loading && <div className="text-center text-sm text-slate-400 py-8">Loading events…</div>}

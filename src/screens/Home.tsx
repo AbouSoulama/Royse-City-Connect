@@ -6,7 +6,7 @@ import { fetchUpcomingEvents } from '../services/events';
 import { SectionHeader } from '../components/Layout';
 import { HomeHero, useHeroSlides } from '../components/HomeHero';
 import { PinnedPostCard, PostDetailSheet, formatPostDate } from '../components/Posts';
-import { CheckCircle, MapPin, ChevronRight, StarIcon } from '../components/Icons';
+import { CheckCircle, MapPin, ChevronRight, StarIcon, NewsIcon } from '../components/Icons';
 import { AuthUser } from '../types/auth';
 import { useEffect, useState } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -47,7 +47,7 @@ export function Home({
   }, []);
 
   return (
-    <div className="pb-6 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+    <div className="pb-7 w-full max-w-full min-w-0 overflow-x-hidden box-border">
       <HomeHero
         userName={user.name.split(' ')[0]}
         city={user.city}
@@ -56,11 +56,11 @@ export function Home({
       />
 
       {pinned.length > 0 && (
-        <section className="section-lazy">
+        <section className="section-lazy animate-rise" style={{ animationDelay: '0.05s' }}>
           <SectionHeader
             title={t('importantAnnouncements')}
             action={
-              <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap">
+              <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap tap-scale">
                 {t('seeAll')} <ChevronRight size={14} />
               </button>
             }
@@ -73,11 +73,11 @@ export function Home({
         </section>
       )}
 
-      <section className="section-lazy">
+      <section className="section-lazy animate-rise" style={{ animationDelay: '0.1s' }}>
         <SectionHeader
           title={t('latestNews')}
           action={
-            <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap">
+            <button onClick={() => goTo('news')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap tap-scale">
               {t('seeAll')} <ChevronRight size={14} />
             </button>
           }
@@ -85,18 +85,18 @@ export function Home({
         <div className="px-4">
           <button
             onClick={() => goTo('news')}
-            className="w-full card-modern rounded-2xl p-4 text-left tap-scale overflow-hidden relative"
+            className="w-full card-modern p-4 text-left tap-scale overflow-hidden relative group"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-navy/[0.04] to-crimson/[0.06] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-navy/[0.04] via-transparent to-crimson/[0.08] pointer-events-none" />
             <div className="relative flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-2xl shrink-0 shadow-lg">
-                📰
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center shrink-0 shadow-lg shadow-navy/25 text-white">
+                <NewsIcon size={26} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-extrabold text-navy">{t('latestNews')}</div>
+                <div className="text-sm font-extrabold text-navy font-display">{t('latestNews')}</div>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">Community news, alerts, church updates & more</p>
               </div>
-              <div className="w-8 h-8 rounded-full bg-crimson/10 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-crimson/10 flex items-center justify-center shrink-0 group-hover:bg-crimson/20 transition-colors">
                 <ChevronRight size={16} className="text-crimson" />
               </div>
             </div>
@@ -104,11 +104,11 @@ export function Home({
         </div>
       </section>
 
-      <section className="section-lazy">
+      <section className="section-lazy animate-rise" style={{ animationDelay: '0.15s' }}>
         <SectionHeader
           title={t('upcomingEvents')}
           action={
-            <button onClick={() => goTo('events')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap">
+            <button onClick={() => goTo('events')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap tap-scale">
               {t('seeAll')} <ChevronRight size={14} />
             </button>
           }
@@ -118,13 +118,13 @@ export function Home({
             <button
               key={e.id}
               onClick={() => goTo('events')}
-              className="shrink-0 w-[230px] rounded-2xl overflow-hidden card-modern text-left tap-scale snap-start"
+              className="shrink-0 w-[236px] overflow-hidden card-modern text-left tap-scale snap-start"
             >
               <div className={`h-28 bg-gradient-to-br ${e.color} flex items-center justify-center text-4xl relative overflow-hidden`}>
                 {e.image ? (
                   <>
                     <img src={e.image} alt="" className="absolute inset-0 w-full h-full img-hd" loading="lazy" decoding="async" />
-                    <div className="absolute inset-0 bg-black/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10" />
                     <span className="relative drop-shadow-lg">{e.emoji}</span>
                   </>
                 ) : (
@@ -135,7 +135,7 @@ export function Home({
                 <div className="text-[10px] font-extrabold text-crimson uppercase tracking-wide">
                   {formatPostDate(e.date)} • {e.time}
                 </div>
-                <h4 className="font-extrabold text-navy text-sm mt-1 line-clamp-2 leading-snug">{e.title}</h4>
+                <h4 className="font-extrabold text-navy text-sm mt-1 line-clamp-2 leading-snug font-display">{e.title}</h4>
                 <div className="flex items-center gap-1 mt-2 text-[11px] text-slate-500 min-w-0">
                   <MapPin size={11} className="shrink-0 text-crimson/70" />
                   <span className="truncate">{e.location}</span>
@@ -146,28 +146,28 @@ export function Home({
         </div>
       </section>
 
-      <section className="section-lazy px-4 mt-5">
+      <section className="section-lazy px-4 mt-6 animate-rise" style={{ animationDelay: '0.2s' }}>
         <button
           type="button"
           onClick={onOpenFeedback}
-          className="w-full bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-200/60 rounded-2xl p-4 flex items-center gap-4 text-left tap-scale shadow-sm"
+          className="w-full bg-gradient-to-r from-navy/[0.04] via-crimson/[0.06] to-navy/[0.04] border border-navy/10 rounded-[1.35rem] p-4 flex items-center gap-4 text-left tap-scale shadow-sm"
         >
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg">
+          <div className="w-14 h-14 rounded-2xl btn-crimson flex items-center justify-center shrink-0">
             <StarIcon size={24} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-extrabold text-navy text-sm">{t('feedbackCardTitle')}</div>
+            <div className="font-extrabold text-navy text-sm font-display">{t('feedbackCardTitle')}</div>
             <div className="text-xs text-slate-600 mt-1 leading-relaxed">{t('feedbackCardDesc')}</div>
           </div>
-          <ChevronRight size={18} className="text-amber-600 shrink-0" />
+          <ChevronRight size={18} className="text-crimson shrink-0" />
         </button>
       </section>
 
-      <section className="section-lazy">
+      <section className="section-lazy animate-rise" style={{ animationDelay: '0.25s' }}>
         <SectionHeader
           title={t('featuredBusinesses')}
           action={
-            <button onClick={() => goTo('businesses')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap">
+            <button onClick={() => goTo('businesses')} className="text-xs font-bold text-crimson flex items-center gap-0.5 whitespace-nowrap tap-scale">
               {t('seeAll')} <ChevronRight size={14} />
             </button>
           }
@@ -177,13 +177,13 @@ export function Home({
             <button
               key={b.id}
               onClick={() => goTo('businesses')}
-              className="card-modern rounded-2xl overflow-hidden text-left tap-scale"
+              className="card-modern overflow-hidden text-left tap-scale"
             >
               <div className={`h-28 bg-gradient-to-br ${b.color} flex items-center justify-center text-4xl relative overflow-hidden`}>
                 {b.image ? (
                   <>
                     <img src={b.image} alt="" className="absolute inset-0 w-full h-full img-hd" loading="lazy" decoding="async" />
-                    <div className="absolute inset-0 bg-black/25" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     <span className="relative drop-shadow-md">{b.emoji}</span>
                   </>
                 ) : (
@@ -192,7 +192,7 @@ export function Home({
               </div>
               <div className="p-3">
                 <div className="flex items-center gap-1">
-                  <h4 className="font-extrabold text-navy text-xs leading-tight line-clamp-1 flex-1">{b.name}</h4>
+                  <h4 className="font-extrabold text-navy text-xs leading-tight line-clamp-1 flex-1 font-display">{b.name}</h4>
                   {b.verified && <CheckCircle size={12} className="text-crimson shrink-0" />}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-1 font-medium">{b.category} • {b.city}</div>

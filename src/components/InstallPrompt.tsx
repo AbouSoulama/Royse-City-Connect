@@ -13,16 +13,21 @@ const DISMISS_DAYS = 7;
 function isStandalone(): boolean {
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches ||
     (window.navigator as Navigator & { standalone?: boolean }).standalone === true
   );
 }
 
 function isMobileBrowser(): boolean {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
 function isIOS(): boolean {
-  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return (
+    /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
 }
 
 function wasRecentlyDismissed(): boolean {
@@ -49,32 +54,44 @@ export function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android'>('android');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
     if (isStandalone() || !isMobileBrowser() || wasRecentlyDismissed()) return;
 
     if (isIOS()) {
       setPlatform('ios');
-      const timer = setTimeout(() => setVisible(true), 1500);
+      const timer = setTimeout(() => setVisible(true), 1800);
       return () => clearTimeout(timer);
     }
 
     setPlatform('android');
+    let promptReady = false;
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
+      promptReady = true;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setShowManual(false);
       setVisible(true);
     };
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
 
     const fallback = setTimeout(() => {
-      setVisible((v) => v || true);
-    }, 2000);
+      if (!promptReady) setShowManual(true);
+      setVisible(true);
+    }, 3500);
+
+    const onInstalled = () => {
+      setVisible(false);
+      setDeferredPrompt(null);
+    };
+    window.addEventListener('appinstalled', onInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+      window.removeEventListener('appinstalled', onInstalled);
       clearTimeout(fallback);
     };
   }, []);
@@ -96,7 +113,7 @@ export function InstallPrompt() {
       setDeferredPrompt(null);
       return;
     }
-    dismiss();
+    setShowManual(true);
   }, [deferredPrompt, dismiss]);
 
   if (!visible) return null;
@@ -118,20 +135,35 @@ export function InstallPrompt() {
         </button>
       </div>
       <div className="install-banner-actions">
-        {platform === 'android' && deferredPrompt ? (
-          <button type="button" onClick={install} className="install-btn-primary">
-            {t('installNow')}
-          </button>
-        ) : platform === 'ios' ? (
+        {platform === 'ios' || (platform === 'android' && showManual && !deferredPrompt) ? (
           <div className="install-ios-steps">
-            <span className="install-ios-step">
-              <span className="install-ios-num">1</span>
-              {t('installStep1IOS')}
-            </span>
-            <span className="install-ios-step">
-              <span className="install-ios-num">2</span>
-              {t('installStep2IOS')}
-            </span>
+            {platform === 'ios' ? (
+              <>
+                <span className="install-ios-step">
+                  <span className="install-ios-num">1</span>
+                  {t('installStep1IOS')}
+                </span>
+                <span className="install-ios-step">
+                  <span className="install-ios-num">2</span>
+                  {t('installStep2IOS')}
+                </span>
+                <span className="install-ios-step">
+                  <span className="install-ios-num">3</span>
+                  {t('installStep3IOS')}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="install-ios-step">
+                  <span className="install-ios-num">1</span>
+                  {t('installStep1Android')}
+                </span>
+                <span className="install-ios-step">
+                  <span className="install-ios-num">2</span>
+                  {t('installStep2Android')}
+                </span>
+              </>
+            )}
           </div>
         ) : (
           <button type="button" onClick={install} className="install-btn-primary">

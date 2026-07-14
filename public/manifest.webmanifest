@@ -1,14 +1,19 @@
 {
+  "id": "/",
   "name": "Royse City Connect",
   "short_name": "RC Connect",
   "description": "Community news, businesses, events and jobs for the African diaspora in Royse City, Texas.",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
+  "display_override": ["standalone", "browser"],
+  "background_color": "#1E3A5F",
   "theme_color": "#1E3A5F",
   "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
   "categories": ["social", "lifestyle", "news"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -23,7 +28,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

@@ -69,14 +69,14 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
 
   return (
     <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
-      <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100 sticky top-0 z-10">
+      <div className="page-header px-4 pt-4 pb-3 sticky top-0 z-10">
         <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-extrabold text-navy leading-tight truncate">{t('latestNews')}</h1>
-            <p className="text-xs text-slate-500">{filtered.length} items</p>
+            <h1 className="text-xl font-extrabold text-navy leading-tight truncate font-display tracking-tight">{t('latestNews')}</h1>
+            <p className="text-xs text-slate-500 mt-0.5">{filtered.length} items</p>
           </div>
           {!user.guest && user.id && (
-            <button onClick={() => setPostOpen(true)} className="flex items-center gap-1 bg-crimson text-white text-xs font-bold px-3 py-2 rounded-xl shrink-0 whitespace-nowrap">
+            <button onClick={() => setPostOpen(true)} className="flex items-center gap-1 btn-crimson text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shrink-0 whitespace-nowrap tap-scale">
               <PlusIcon size={14} /> Post
             </button>
           )}
@@ -86,8 +86,8 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-                  filter === f.key ? 'bg-navy text-white shadow' : 'bg-slate-100 text-slate-600'
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  filter === f.key ? 'chip-active' : 'bg-navy/[0.05] text-slate-600 hover:bg-navy/[0.08]'
                 }`}
               >
                 {t(f.tkey)}

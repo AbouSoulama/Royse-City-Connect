@@ -72,7 +72,7 @@ export function PostCard({ post, onOpen }: { post: Post; onOpen: (p: Post) => vo
     <button
       type="button"
       onClick={() => onOpen(post)}
-      className="w-full text-left shine-card rounded-2xl p-4 active:scale-[0.99] transition"
+      className="w-full text-left shine-card rounded-[1.35rem] p-4 tap-scale transition"
     >
       <div className="flex items-center gap-2 mb-2 flex-wrap min-w-0">
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${categoryColors[getFeedCategory(post)]}`}>

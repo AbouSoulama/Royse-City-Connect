@@ -141,16 +141,14 @@ export function Auth({
     view === 'signin' ? t('signInSubtitle') : t('signUpSubtitle');
 
   return (
-    <div
-      className="flex-1 min-h-0 flex flex-col overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #1E3A5F 0%, #15294A 100%)' }}
-    >
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden welcome-mesh relative">
+      <div className="absolute inset-0 animate-shimmer pointer-events-none opacity-25" />
       <div className="shrink-0 relative px-4 pt-3 pb-14 text-center">
         {onBack && view !== 'recovery' && (
           <button
             type="button"
             onClick={onBack}
-            className="absolute top-6 left-5 p-2 rounded-full bg-white/15 text-white"
+            className="absolute top-6 left-5 p-2 rounded-full bg-white/15 text-white backdrop-blur-md border border-white/20 tap-scale"
             aria-label="Back"
           >
             <ChevronLeft size={20} />
@@ -159,20 +157,20 @@ export function Auth({
         <button
           type="button"
           onClick={() => setLang(lang === 'en' ? 'fr' : 'en')}
-          className="absolute top-6 right-5 flex items-center gap-1 text-xs font-bold text-white bg-white/10 px-3 py-1.5 rounded-full"
+          className="absolute top-6 right-5 flex items-center gap-1 text-xs font-bold text-white bg-white/12 px-3 py-1.5 rounded-full border border-white/20 backdrop-blur-md"
         >
-          <span>{lang === 'en' ? '🇺🇸' : '🇫🇷'}</span> {lang.toUpperCase()}
+          {lang.toUpperCase()}
         </button>
 
-        <div className="bg-white rounded-2xl p-4 inline-block shadow-xl mt-8 mb-4">
-          <LogoFull height={72} />
+        <div className="bg-white rounded-[1.5rem] p-4 inline-block shadow-[0_20px_50px_rgba(0,0,0,0.3)] mt-8 mb-4 animate-welcome-logo">
+          <LogoFull height={68} />
         </div>
-        <p className="text-white font-extrabold text-lg">{t('appName')}</p>
+        <p className="text-white font-extrabold text-lg font-display tracking-tight">{t('appName')}</p>
       </div>
 
-      <div className="flex-1 min-h-0 bg-white rounded-t-[1.75rem] -mt-10 px-4 sm:px-5 pt-7 pb-5 shadow-2xl overflow-y-auto phone-scroll min-w-0">
-        <h2 className="text-2xl font-extrabold text-navy">{title}</h2>
-        <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
+      <div className="flex-1 min-h-0 bg-white rounded-t-[1.85rem] -mt-10 px-4 sm:px-5 pt-7 pb-5 shadow-2xl overflow-y-auto phone-scroll min-w-0 animate-slide-up">
+        <h2 className="text-2xl font-extrabold text-navy font-display tracking-tight">{title}</h2>
+        <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">{subtitle}</p>
 
         {!isConfigured && view !== 'forgot' && (
           <div className="mt-3 text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-xl px-3 py-2">
@@ -306,7 +304,7 @@ export function Auth({
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-5 bg-navy hover:bg-navy-dark disabled:opacity-60 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-[0.98] transition"
+            className="w-full mt-5 btn-navy disabled:opacity-60 text-white font-bold py-3.5 rounded-2xl active:scale-[0.98] transition font-display tracking-wide"
           >
             {loading ? '…' :
               view === 'forgot' ? 'Send reset link' :
@@ -369,7 +367,7 @@ function AuthField({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1.5 px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-navy outline-none text-sm text-slate-800 min-w-0"
+        className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-navy focus:ring-2 focus:ring-navy/10 outline-none text-sm text-slate-800 min-w-0 transition"
       />
     </label>
   );

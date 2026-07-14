@@ -28,15 +28,15 @@ export function PhoneShell({
   const [langOpen, setLangOpen] = useState(false);
 
   return (
-    <div className="app-viewport fixed inset-0 w-full max-w-full overflow-hidden bg-white md:bg-slate-200 md:bg-pattern flex flex-col md:items-center md:justify-center md:p-6">
-      <div className="app-frame flex flex-col flex-1 min-h-0 w-full max-w-full md:flex-none md:w-[420px] md:max-w-[420px] md:h-[min(860px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative md:phone-glow">
+    <div className="app-viewport fixed inset-0 w-full max-w-full overflow-hidden bg-white md:bg-[#dce3ee] md:bg-pattern flex flex-col md:items-center md:justify-center md:p-6">
+      <div className="app-frame flex flex-col flex-1 min-h-0 w-full max-w-full md:flex-none md:w-[420px] md:max-w-[420px] md:h-[min(860px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] md:rounded-[42px] md:shadow-2xl md:border-[10px] md:border-slate-900 relative md:phone-glow md:overflow-hidden">
         <div className="hidden md:flex absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl z-50 items-end justify-center pb-1">
           <div className="w-2 h-2 rounded-full bg-slate-700 mr-2" />
           <div className="w-12 h-1.5 rounded-full bg-slate-700" />
         </div>
 
         {!hideHeader && (
-          <header className="shrink-0 bg-white/97 border-b border-slate-100/80 px-3 pt-3 pb-2.5 flex items-center justify-between relative z-10 gap-1.5 min-w-0 shadow-[0_1px_12px_rgba(30,58,95,0.04)]">
+          <header className="shrink-0 page-header px-3 pt-3 pb-2.5 flex items-center justify-between relative z-10 gap-1.5 min-w-0">
             <button type="button" onClick={() => setPage('home')} className="flex items-center min-w-0 flex-1 max-w-[45%] tap-scale">
               <LogoHeader height={34} />
             </button>
@@ -46,38 +46,38 @@ export function PhoneShell({
                 <button
                   type="button"
                   onClick={() => setLangOpen(!langOpen)}
-                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-navy text-xs font-extrabold"
+                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full bg-navy/[0.06] hover:bg-navy/[0.1] text-navy text-xs font-extrabold transition-colors"
                 >
                   <GlobeIcon size={14} />
-                  <span className="uppercase">{lang}</span>
+                  <span className="uppercase tracking-wide">{lang}</span>
                 </button>
                 {langOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 w-32 animate-fade-in">
+                    <div className="absolute right-0 top-full mt-1.5 bg-white/95 backdrop-blur-xl border border-navy/10 rounded-2xl shadow-xl py-1.5 z-50 w-36 animate-fade-in overflow-hidden">
                       <button type="button" onClick={() => { setLang('en'); setLangOpen(false); }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${lang === 'en' ? 'text-navy font-semibold' : 'text-slate-700'}`}>
-                        🇺🇸 English
+                        className={`w-full text-left px-3.5 py-2.5 text-sm transition-colors ${lang === 'en' ? 'text-crimson font-bold bg-crimson/[0.06]' : 'text-navy hover:bg-slate-50'}`}>
+                        English
                       </button>
                       <button type="button" onClick={() => { setLang('fr'); setLangOpen(false); }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${lang === 'fr' ? 'text-navy font-semibold' : 'text-slate-700'}`}>
-                        🇫🇷 Français
+                        className={`w-full text-left px-3.5 py-2.5 text-sm transition-colors ${lang === 'fr' ? 'text-crimson font-bold bg-crimson/[0.06]' : 'text-navy hover:bg-slate-50'}`}>
+                        Français
                       </button>
                     </div>
                   </>
                 )}
               </div>
 
-              <button type="button" onClick={onOpenNotifs} className="relative p-2 rounded-full hover:bg-slate-100 text-navy" aria-label={t('notifications')}>
+              <button type="button" onClick={onOpenNotifs} className="relative p-2 rounded-full hover:bg-navy/[0.06] text-navy transition-colors" aria-label={t('notifications')}>
                 <BellIcon size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-crimson text-white text-[9px] font-bold flex items-center justify-center">
+                  <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-crimson text-white text-[9px] font-bold flex items-center justify-center shadow-sm pulse-dot">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
-              <button type="button" onClick={onOpenProfile} className="p-2 rounded-full hover:bg-slate-100 text-navy" aria-label={t('profile')}>
+              <button type="button" onClick={onOpenProfile} className="p-2 rounded-full hover:bg-navy/[0.06] text-navy transition-colors" aria-label={t('profile')}>
                 <UserIcon size={20} />
               </button>
             </div>
@@ -86,14 +86,14 @@ export function PhoneShell({
 
         <main
           className={`flex flex-col ${
-            fillScreen ? 'flex-1 min-h-0 min-w-0 overflow-hidden' : 'app-scroll phone-scroll bg-slate-50'
+            fillScreen ? 'flex-1 min-h-0 min-w-0 overflow-hidden' : 'app-scroll phone-scroll'
           }`}
         >
           {children}
         </main>
 
         {!hideNav && (
-          <nav className="shrink-0 z-20 nav-modern px-1 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] grid grid-cols-5 gap-0 w-full max-w-full min-w-0">
+          <nav className="shrink-0 z-20 nav-modern px-1.5 pt-1.5 pb-[max(0.4rem,env(safe-area-inset-bottom,0px))] grid grid-cols-5 gap-0 w-full max-w-full min-w-0">
             <NavBtn icon={<HomeIcon size={20} />} label={t('home')} active={page === 'home'} onClick={() => setPage('home')} />
             <NavBtn icon={<NewsIcon size={20} />} label={t('news')} active={page === 'news'} onClick={() => setPage('news')} />
             <NavBtn icon={<StoreIcon size={20} />} label={t('businesses')} active={page === 'businesses'} onClick={() => setPage('businesses')} />
@@ -111,20 +111,20 @@ function NavBtn({ icon, label, active, onClick }: { icon: ReactNode; label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-xl min-w-0 w-full tap-scale ${
+      className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-2xl min-w-0 w-full tap-scale transition-colors ${
         active ? 'text-crimson' : 'text-slate-400 hover:text-navy'
       }`}
     >
-      <div className={`shrink-0 p-1 rounded-xl ${active ? 'nav-btn-active' : ''}`}>{icon}</div>
-      <span className={`text-[8px] leading-[1.1] text-center line-clamp-2 w-full ${active ? 'font-extrabold' : 'font-medium'}`}>{label}</span>
+      <div className={`shrink-0 p-1.5 rounded-xl transition-all duration-200 ${active ? 'nav-btn-active animate-nav-glow' : ''}`}>{icon}</div>
+      <span className={`text-[8px] leading-[1.1] text-center line-clamp-2 w-full tracking-wide ${active ? 'font-extrabold' : 'font-semibold'}`}>{label}</span>
     </button>
   );
 }
 
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-4 mt-6 mb-2.5 min-w-0 max-w-full">
-      <h2 className="text-sm font-black text-navy min-w-0 flex-1 leading-snug truncate section-accent">{title}</h2>
+    <div className="flex items-center gap-2 px-4 mt-7 mb-3 min-w-0 max-w-full">
+      <h2 className="text-[0.95rem] font-extrabold text-navy min-w-0 flex-1 leading-snug truncate section-accent">{title}</h2>
       {action && <div className="shrink-0 max-w-[38%]">{action}</div>}
     </div>
   );
@@ -132,12 +132,13 @@ export function SectionHeader({ title, action }: { title: string; action?: React
 
 export function LoadingScreen({ message }: { message: string }) {
   return (
-    <div
-      className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-white"
-      style={{ background: 'linear-gradient(180deg, #1E3A5F 0%, #15294A 100%)' }}
-    >
-      <div className="w-11 h-11 rounded-full border-[3px] border-white/30 border-t-white animate-spin" />
-      <p className="text-sm font-medium text-white/90 text-center">{message}</p>
+    <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6 text-white welcome-mesh relative overflow-hidden">
+      <div className="absolute inset-0 animate-shimmer pointer-events-none opacity-40" />
+      <div className="relative">
+        <div className="w-14 h-14 rounded-full border-[3px] border-white/20 border-t-crimson-light animate-spin" />
+        <div className="absolute inset-2 rounded-full border-2 border-white/10 border-b-white/40" style={{ animation: 'spinSlow 1.6s linear infinite reverse' }} />
+      </div>
+      <p className="text-sm font-semibold text-white/90 text-center tracking-wide animate-fade-in">{message}</p>
     </div>
   );
 }
@@ -146,11 +147,12 @@ export function ModalSheet({ open, onClose, title, children }: { open: boolean; 
   if (!open) return null;
   return (
     <div className="absolute inset-0 z-50 flex items-end animate-fade-in">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full bg-white rounded-t-3xl max-h-[85dvh] flex flex-col animate-slide-up overflow-hidden">
-        <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-100 shrink-0 min-w-0">
-          <h3 className="font-extrabold text-navy min-w-0 flex-1 truncate">{title}</h3>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 shrink-0">
+      <div className="absolute inset-0 bg-navy-dark/45 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative w-full bg-white rounded-t-[1.75rem] max-h-[85dvh] flex flex-col animate-slide-up overflow-hidden shadow-2xl">
+        <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-slate-200 shrink-0" />
+        <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-3 border-b border-slate-100/80 shrink-0 min-w-0">
+          <h3 className="font-extrabold text-navy min-w-0 flex-1 truncate font-display text-lg">{title}</h3>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 shrink-0 transition-colors">
             <XIcon size={20} />
           </button>
         </div>

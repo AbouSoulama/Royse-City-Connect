@@ -233,6 +233,9 @@ export const translations = {
     installLater: 'Not now',
     installStep1IOS: 'Tap the Share button in Safari',
     installStep2IOS: 'Select "Add to Home Screen"',
+    installStep3IOS: 'Tap "Add" to confirm',
+    installStep1Android: 'Open the Chrome menu (⋮) in the top right',
+    installStep2Android: 'Tap "Install app" or "Add to Home screen"',
   },
   fr: {
     appName: 'Royse City Connect',
@@ -452,6 +455,9 @@ export const translations = {
     installLater: 'Plus tard',
     installStep1IOS: 'Appuyez sur Partager dans Safari',
     installStep2IOS: 'Sélectionnez « Sur l\'écran d\'accueil »',
+    installStep3IOS: 'Appuyez sur « Ajouter » pour confirmer',
+    installStep1Android: 'Ouvrez le menu Chrome (⋮) en haut à droite',
+    installStep2Android: 'Choisissez « Installer l\'application » ou « Ajouter à l\'écran d\'accueil »',
   },
 } as const;
 
