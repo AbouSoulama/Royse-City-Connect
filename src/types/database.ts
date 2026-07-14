@@ -2,7 +2,7 @@ export type UserRole = 'member' | 'business' | 'admin';
 export type PostCategory =
   | 'news' | 'immigration' | 'church' | 'association' | 'fundraiser' | 'funeral' | 'alert'
   | 'hospitality' | 'realestate';
-export type ContentStatus = 'pending' | 'approved' | 'rejected';
+export type ContentStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 export type JobType = 'Full-time' | 'Part-time' | 'Contract' | 'Volunteer';
 
 export interface Profile {
@@ -41,6 +41,46 @@ export interface DbBusiness {
   image_url: string | null;
   created_at: string;
   updated_at: string;
+  // Extended directory fields (migration 012)
+  products_services?: string | null;
+  unique_selling_point?: string | null;
+  year_founded?: number | null;
+  employee_count?: string | null;
+  owner_title?: string | null;
+  owner_email?: string | null;
+  preferred_contact?: string | null;
+  website?: string | null;
+  postal_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  service_areas?: string[];
+  hours?: Record<string, unknown>;
+  social?: Record<string, unknown>;
+  photos?: Record<string, unknown>;
+  ideal_clients?: string | null;
+  top_services?: string[];
+  price_range?: string | null;
+  commercial_options?: string[];
+  languages?: string[];
+  payment_methods?: string[];
+  wheelchair_accessible?: boolean;
+  family_owned?: boolean;
+  woman_owned?: boolean;
+  veteran_owned?: boolean;
+  minority_owned?: boolean;
+  licensed?: boolean;
+  insured?: boolean;
+  emergency_service?: boolean;
+  seasonal_services?: boolean;
+  keywords?: string | null;
+  ai_tags?: string | null;
+  ideal_for?: string[];
+  promo_channels?: string[];
+  want_ad_offers?: boolean;
+  photo_usage_allowed?: boolean;
+  partnership_comments?: string | null;
+  registration_step?: number;
+  draft_token?: string | null;
 }
 
 export interface DbPost {

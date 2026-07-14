@@ -2,13 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useT } from '../i18n';
 import { businessCategories, cities, Business } from '../data';
-import { ModalSheet } from '../components/Layout';
-import { ImageUpload } from '../components/ImageUpload';
-import { createBusiness, fetchApprovedBusinesses } from '../services/businesses';
+import { fetchApprovedBusinesses } from '../services/businesses';
 import { SearchIcon, CheckCircle, PhoneIcon, MapPin, StarIcon, PlusIcon, ChevronLeft, FilterIcon } from '../components/Icons';
 import type { AuthUser } from '../types/auth';
 
-export function Businesses({ user }: { user: AuthUser }) {
+export function Businesses({ user: _user }: { user: AuthUser }) {
   const { t } = useT();
   const { detail, openDetail, closeDetail } = useNavigation();
   const [search, setSearch] = useState('');
@@ -16,7 +14,6 @@ export function Businesses({ user }: { user: AuthUser }) {
   const [city, setCity] = useState<string | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitOpen, setSubmitOpen] = useState(false);
 
   const selected = detail?.type === 'business' ? businesses.find((b) => b.id === detail.id) ?? null : null;
 
@@ -118,163 +115,13 @@ export function Businesses({ user }: { user: AuthUser }) {
         ))}
 
         <button
-          onClick={() => setSubmitOpen(true)}
+          onClick={() => { window.location.href = '/business/register'; }}
           className="w-full mt-3 border-2 border-dashed border-crimson/40 text-crimson font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-crimson/5"
         >
           <PlusIcon size={18} /> {t('submitBusiness')}
         </button>
       </div>
-
-      <ModalSheet open={submitOpen} onClose={() => setSubmitOpen(false)} title={t('submitBusiness')}>
-        <SubmitBusinessForm
-          user={user}
-          onClose={() => setSubmitOpen(false)}
-          onSuccess={() => {
-            setSubmitOpen(false);
-            load();
-          }}
-        />
-      </ModalSheet>
     </div>
-  );
-}
-
-function SubmitBusinessForm({
-  user, onClose, onSuccess,
-}: {
-  user: AuthUser;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const { t } = useT();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | undefined>();
-  const [form, setForm] = useState({
-    name: '',
-    category: businessCategories[0],
-    description: '',
-    phone: user.phone || '',
-    whatsapp: '',
-    city: user.city || 'Royse City',
-    address: '',
-  });
-
-  if (user.guest || !user.id) {
-    return (
-      <div className="p-5 text-center">
-        <p className="text-sm text-slate-600">Sign in to submit your business listing.</p>
-        <button onClick={onClose} className="mt-4 text-crimson font-bold text-sm">{t('close')}</button>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="p-5 text-center">
-        <div className="text-4xl mb-2">✅</div>
-        <p className="text-sm text-navy font-semibold">Business submitted!</p>
-        <p className="text-xs text-slate-500 mt-1">An admin will review your listing before it goes live.</p>
-        <button onClick={onSuccess} className="mt-4 w-full bg-crimson text-white font-bold py-3 rounded-xl">{t('close')}</button>
-      </div>
-    );
-  }
-
-  const submit = async () => {
-    setError(null);
-    if (!form.name || !form.description || !form.phone) {
-      setError('Name, description and phone are required.');
-      return;
-    }
-
-    setLoading(true);
-    const { error: err } = await createBusiness({
-      ownerId: user.id!,
-      ownerName: user.name,
-      name: form.name,
-      category: form.category,
-      description: form.description,
-      phone: form.phone,
-      whatsapp: form.whatsapp || undefined,
-      city: form.city,
-      address: form.address || undefined,
-      imageUrl,
-    });
-    setLoading(false);
-
-    if (err) {
-      setError(err);
-      return;
-    }
-    setSuccess(true);
-  };
-
-  return (
-    <div className="p-4 space-y-3 pb-6">
-      <FormField label="Business name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
-      <label className="block">
-        <span className="text-xs font-bold text-slate-600">{t('filterCategory')}</span>
-        <select
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          className="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-navy outline-none"
-        >
-          {businessCategories.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-      </label>
-      <FormField label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline />
-      <FormField label={t('phone')} value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} type="tel" />
-      <FormField label={t('whatsapp')} value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} type="tel" />
-      <FormField label={t('city')} value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
-      <FormField label={t('location')} value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
-      <ImageUpload folder="businesses" value={imageUrl} onChange={setImageUrl} label="Cover photo (optional)" />
-
-      {error && (
-        <div className="text-xs bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">{error}</div>
-      )}
-
-      <button
-        onClick={submit}
-        disabled={loading}
-        className="w-full bg-crimson hover:bg-crimson-dark disabled:opacity-60 text-white font-bold py-3.5 rounded-xl"
-      >
-        {loading ? '…' : t('submit')}
-      </button>
-    </div>
-  );
-}
-
-function FormField({
-  label, value, onChange, type = 'text', multiline,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  multiline?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="text-xs font-bold text-slate-600">{label}</span>
-      {multiline ? (
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={3}
-          className="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-navy outline-none text-sm text-slate-800 resize-none"
-        />
-      ) : (
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-navy outline-none text-sm text-slate-800"
-        />
-      )}
-    </label>
   );
 }
 

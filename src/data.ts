@@ -17,7 +17,7 @@ export interface Post {
   date: string;
   pinned?: boolean;
   important?: boolean;
-  status: 'approved' | 'pending' | 'rejected';
+  status: 'approved' | 'pending' | 'rejected' | 'draft';
   image?: string;
   reactions?: number;
   sourceType?: 'post' | 'event' | 'job' | 'business';
@@ -41,7 +41,7 @@ export interface Business {
   featured?: boolean;
   rating: number;
   createdAt: string;
-  status?: 'approved' | 'pending' | 'rejected';
+  status?: 'approved' | 'pending' | 'rejected' | 'draft';
   image?: string;
 }
 
@@ -58,7 +58,7 @@ export interface Event {
   color: string;
   featured?: boolean;
   attendees: number;
-  status?: 'approved' | 'pending' | 'rejected';
+  status?: 'approved' | 'pending' | 'rejected' | 'draft';
   image?: string;
 }
 
@@ -72,7 +72,7 @@ export interface Job {
   postedBy: string;
   type: 'Full-time' | 'Part-time' | 'Contract' | 'Volunteer';
   postedAgo: string;
-  status?: 'approved' | 'pending' | 'rejected';
+  status?: 'approved' | 'pending' | 'rejected' | 'draft';
   image?: string;
 }
 
