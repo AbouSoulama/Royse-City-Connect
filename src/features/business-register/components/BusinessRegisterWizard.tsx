@@ -42,6 +42,7 @@ export function BusinessRegisterWizard({ onHome }: { onHome: () => void }) {
   const [draftToken, setDraftToken] = useState(() => newDraftToken());
   const [recordId, setRecordId] = useState<string | undefined>();
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const defaults = useMemo(() => createDefaultValues(), []);
 
@@ -140,18 +141,22 @@ export function BusinessRegisterWizard({ onHome }: { onHome: () => void }) {
     return okFields;
   };
 
+  const scrollToTop = () => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const goNext = async () => {
     const ok = await validateStep(step);
     if (!ok) return;
     const next = Math.min(step + 1, TOTAL_STEPS);
     setStep(next);
     await persist('draft', next);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   const goPrev = () => {
     setStep((s) => Math.max(1, s - 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   const saveDraft = async () => {
@@ -178,13 +183,20 @@ export function BusinessRegisterWizard({ onHome }: { onHome: () => void }) {
   const stepProps = { register, control, errors, watch, setValue };
 
   if (submitted) {
-    return <SuccessPage onHome={onHome} />;
+    return (
+      <div className="h-[100dvh] overflow-y-auto phone-scroll bg-cream">
+        <SuccessPage onHome={onHome} />
+      </div>
+    );
   }
 
   return (
     <FormProvider {...methods}>
-      <div className="min-h-[100dvh] welcome-mesh text-white">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-28 pt-6">
+      <div
+        ref={scrollRef}
+        className="h-[100dvh] max-h-[100dvh] overflow-x-hidden overflow-y-auto phone-scroll welcome-mesh text-white"
+      >
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-28 pt-6 min-h-full">
           <header className="flex items-center justify-between gap-3 mb-6">
             <button type="button" onClick={onHome} className="rounded-2xl bg-white p-2 shadow-lg tap-scale">
               <LogoHeader height={32} />
@@ -195,7 +207,7 @@ export function BusinessRegisterWizard({ onHome }: { onHome: () => void }) {
             </div>
           </header>
 
-          <div className="rounded-[1.75rem] bg-white text-navy shadow-2xl border border-white/40 overflow-hidden">
+          <div className="rounded-[1.75rem] bg-white text-navy shadow-2xl border border-white/40">
             <div className="px-4 sm:px-8 pt-6 pb-4 border-b border-navy/5">
               <ProgressBar step={step} />
               <div className="mt-2 flex items-center justify-between min-h-[1.25rem]">
@@ -244,7 +256,7 @@ export function BusinessRegisterWizard({ onHome }: { onHome: () => void }) {
                     Save draft
                   </Button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   {step < TOTAL_STEPS ? (
                     <Button type="button" variant="primary" onClick={goNext} disabled={saving} className="flex-1 sm:flex-none min-w-[140px]">
                       Next

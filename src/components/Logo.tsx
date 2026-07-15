@@ -1,4 +1,4 @@
-const LOGO_SRC = '/logo.jpg';
+const LOGO_SRC = '/logo.png';
 
 const imgProps = {
   decoding: 'async' as const,
