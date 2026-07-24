@@ -67,7 +67,7 @@ export function Events({ user }: { user: AuthUser }) {
   const featured = sorted.filter((e) => e.featured);
 
   return (
-    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-clip box-border">
       <div className="page-header px-4 pt-4 pb-3">
         <h1 className="text-xl font-extrabold text-navy font-display tracking-tight">{t('events')}</h1>
         <p className="text-xs text-slate-500 mt-0.5">{sorted.length} {t('communityEvents')}</p>

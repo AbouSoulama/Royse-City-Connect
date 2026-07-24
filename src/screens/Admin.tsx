@@ -20,7 +20,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [tab, setTab] = useState<Tab>('overview');
 
   return (
-    <div className="min-h-full bg-slate-50 pb-6 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+    <div className="min-h-full bg-slate-50 pb-6 w-full max-w-full min-w-0 overflow-x-clip box-border">
       <div className="bg-gradient-to-br from-crimson via-crimson-dark to-rose-900 text-white px-4 pt-5 pb-8 relative">
         <button onClick={onBack} className="absolute top-4 left-4 p-2 rounded-full bg-white/15 z-10">
           <ChevronLeft size={20} />

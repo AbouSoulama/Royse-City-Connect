@@ -44,7 +44,7 @@ export function Businesses({ user: _user }: { user: AuthUser }) {
   }
 
   return (
-    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+    <div className="pb-4 w-full max-w-full min-w-0 overflow-x-clip box-border">
       <div className="page-header px-4 pt-4 pb-3 sticky top-0 z-10">
         <h1 className="text-xl font-extrabold text-navy font-display tracking-tight">{t('businesses')}</h1>
         <p className="text-xs text-slate-500 mt-0.5">{filtered.length} {t('communityBusinesses')}</p>

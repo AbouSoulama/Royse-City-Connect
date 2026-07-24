@@ -16,7 +16,6 @@ html {
   height: 100%;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
-  scroll-behavior: smooth;
 }
 
 /* Accessible, on-brand focus ring (keyboard only) */
@@ -41,7 +40,6 @@ body, #root {
   -moz-osx-font-smoothing: grayscale;
   font-family: var(--font-sans);
   background-color: #ffffff;
-  touch-action: manipulation;
   color: #1E3A5F;
 }
 
@@ -80,7 +78,7 @@ h1, h2, h3, .font-display {
     #F7F9FC;
 }
 
-/* Optimized scroll container */
+/* Main scroll container — instant response, no smooth fight on direction change */
 .app-scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -89,18 +87,18 @@ h1, h2, h3, .font-display {
   max-width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  contain: layout style;
-  transform: translateZ(0);
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .phone-scroll::-webkit-scrollbar { width: 0; display: none; }
 .phone-scroll {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  overscroll-behavior-y: none;
 }
 
 input, textarea, select, button {
@@ -108,7 +106,7 @@ input, textarea, select, button {
   font-family: inherit;
 }
 
-/* Horizontal chip rows */
+/* Horizontal chip / carousel rows — allow vertical scroll to pass through */
 .scroll-row-x {
   display: flex;
   flex-wrap: nowrap;
@@ -119,9 +117,9 @@ input, textarea, select, button {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  touch-action: pan-x;
+  /* pan-x alone blocks vertical scroll when the gesture starts on this row */
+  touch-action: pan-x pan-y;
   scroll-snap-type: x proximity;
-  contain: content;
 }
 .scroll-row-x::-webkit-scrollbar { display: none; }
 .scroll-row-x { scrollbar-width: none; }
@@ -436,7 +434,6 @@ input, textarea, select, button {
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
   .stagger-item { animation: none; }
-  html { scroll-behavior: auto; }
 }
 
 /* ─── Welcome atmosphere ─── */

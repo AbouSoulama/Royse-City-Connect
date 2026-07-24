@@ -194,7 +194,7 @@ export function BusinessRegisterWizard({ onHome }: { onHome: () => void }) {
     <FormProvider {...methods}>
       <div
         ref={scrollRef}
-        className="h-[100dvh] max-h-[100dvh] overflow-x-hidden overflow-y-auto phone-scroll welcome-mesh text-white"
+        className="h-[100dvh] max-h-[100dvh] overflow-x-clip overflow-y-auto phone-scroll welcome-mesh text-white"
       >
         <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-28 pt-6 min-h-full">
           <header className="flex items-center justify-between gap-3 mb-6">

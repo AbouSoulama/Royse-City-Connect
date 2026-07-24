@@ -51,7 +51,7 @@ export function Home({
   }, []);
 
   return (
-    <div className="pb-7 w-full max-w-full min-w-0 overflow-x-hidden box-border">
+    <div className="pb-7 w-full max-w-full min-w-0 overflow-x-clip box-border">
       <HomeHero
         userName={user.name.split(' ')[0]}
         city={user.city}
