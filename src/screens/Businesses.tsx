@@ -4,6 +4,7 @@ import { useT } from '../i18n';
 import { businessCategories, cities, Business } from '../data';
 import { fetchApprovedBusinesses } from '../services/businesses';
 import { SearchIcon, CheckCircle, PhoneIcon, MapPin, StarIcon, PlusIcon, ChevronLeft, FilterIcon } from '../components/Icons';
+import { ListSkeleton } from '../components/Layout';
 import type { AuthUser } from '../types/auth';
 
 export function Businesses({ user: _user }: { user: AuthUser }) {
@@ -46,7 +47,7 @@ export function Businesses({ user: _user }: { user: AuthUser }) {
     <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
       <div className="page-header px-4 pt-4 pb-3 sticky top-0 z-10">
         <h1 className="text-xl font-extrabold text-navy font-display tracking-tight">{t('businesses')}</h1>
-        <p className="text-xs text-slate-500 mt-0.5">{filtered.length} African-owned businesses</p>
+        <p className="text-xs text-slate-500 mt-0.5">{filtered.length} {t('communityBusinesses')}</p>
 
         <div className="mt-3 flex items-center gap-2 bg-navy/[0.05] rounded-2xl px-3.5 py-2.5 border border-navy/[0.04]">
           <SearchIcon size={18} className="text-slate-400" />
@@ -84,9 +85,7 @@ export function Businesses({ user: _user }: { user: AuthUser }) {
       </div>
 
       <div className="p-4 space-y-3">
-        {loading && (
-          <div className="text-center text-sm text-slate-400 py-8">Loading businesses…</div>
-        )}
+        {loading && <ListSkeleton count={5} />}
         {!loading && filtered.map((b) => (
           <button
             key={b.id}
@@ -190,10 +189,15 @@ function BusinessDetail({ business, onBack }: { business: Business; onBack: () =
               <span className="text-lg leading-none">💬</span>
               <span className="text-[9px] font-bold text-center leading-tight">{t('whatsapp')}</span>
             </a>
-            <button className="bg-slate-100 text-navy rounded-xl py-2.5 flex flex-col items-center gap-0.5 min-w-0 px-1">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([business.name, business.address, business.city].filter(Boolean).join(', '))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-slate-100 hover:bg-slate-200 text-navy rounded-xl py-2.5 flex flex-col items-center gap-0.5 min-w-0 px-1 transition-colors tap-scale"
+            >
               <MapPin size={16} />
               <span className="text-[9px] font-bold text-center leading-tight">{t('directions')}</span>
-            </button>
+            </a>
           </div>
         </div>
 

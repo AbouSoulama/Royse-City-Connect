@@ -3,7 +3,7 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { resolveFeedItem } from '../lib/share';
 import { useT, TKey } from '../i18n';
 import { Post, PostCategory, FeedCategory, categoryEmoji, cities } from '../data';
-import { ModalSheet, Page } from '../components/Layout';
+import { ModalSheet, Page, ListSkeleton } from '../components/Layout';
 import { PostCard, PostDetailSheet } from '../components/Posts';
 import { ImageUpload } from '../components/ImageUpload';
 import { PlusIcon } from '../components/Icons';
@@ -77,7 +77,7 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
           </div>
           {!user.guest && user.id && (
             <button onClick={() => setPostOpen(true)} className="flex items-center gap-1 btn-crimson text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shrink-0 whitespace-nowrap tap-scale">
-              <PlusIcon size={14} /> Post
+              <PlusIcon size={14} /> {t('createPost')}
             </button>
           )}
         </div>
@@ -97,12 +97,12 @@ export function News({ user, goTo }: { user: AuthUser; goTo?: (p: Page) => void 
       </div>
 
       <div className="px-4 pt-4 space-y-3">
-        {loading && <div className="text-center text-sm text-slate-400 py-8">Loading…</div>}
+        {loading && <ListSkeleton count={5} />}
         {!loading && filtered.map((p) => (
           <PostCard key={p.id} post={p} onOpen={openPost} />
         ))}
         {!loading && filtered.length === 0 && (
-          <div className="text-center text-sm text-slate-400 py-8">— No posts in this category —</div>
+          <div className="text-center text-sm text-slate-400 py-8">{t('noPostsCategory')}</div>
         )}
       </div>
 

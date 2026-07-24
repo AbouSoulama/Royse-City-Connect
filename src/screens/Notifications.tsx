@@ -24,7 +24,7 @@ export function NotificationsList({
     <div className="pb-4">
       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
         <p className="text-xs text-slate-500">
-          {unread > 0 ? `You have ${unread} unread` : t('notifEmpty')}
+          {unread > 0 ? `${unread} ${t('unreadLabel')}` : t('notifEmpty')}
         </p>
         {unread > 0 && (
           <button onClick={onMarkAllRead} className="text-xs font-bold text-crimson">{t('markAllRead')}</button>

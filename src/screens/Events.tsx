@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useT } from '../i18n';
 import { Event } from '../data';
-import { ModalSheet } from '../components/Layout';
+import { ModalSheet, ListSkeleton } from '../components/Layout';
 import type { AuthUser } from '../types/auth';
 import { ImageUpload } from '../components/ImageUpload';
 import {
@@ -12,6 +12,7 @@ import {
   toggleRsvp,
 } from '../services/events';
 import { CalIcon, MapPin, ClockIcon, ChevronLeft, CheckCircle, ShareIcon, PlusIcon } from '../components/Icons';
+import { shareItem } from '../lib/share';
 
 export function Events({ user }: { user: AuthUser }) {
   const { t } = useT();
@@ -69,10 +70,10 @@ export function Events({ user }: { user: AuthUser }) {
     <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
       <div className="page-header px-4 pt-4 pb-3">
         <h1 className="text-xl font-extrabold text-navy font-display tracking-tight">{t('events')}</h1>
-        <p className="text-xs text-slate-500 mt-0.5">{sorted.length} community events</p>
+        <p className="text-xs text-slate-500 mt-0.5">{sorted.length} {t('communityEvents')}</p>
       </div>
 
-      {loading && <div className="text-center text-sm text-slate-400 py-8">Loading events…</div>}
+      {loading && <div className="p-4"><ListSkeleton count={5} /></div>}
 
       {!loading && featured[0] && (
         <div className="p-4">
@@ -136,11 +137,11 @@ export function Events({ user }: { user: AuthUser }) {
           onClick={() => setSubmitOpen(true)}
           className="w-full mt-3 border-2 border-dashed border-crimson/40 text-crimson font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-crimson/5"
         >
-          <PlusIcon size={18} /> Create event
+          <PlusIcon size={18} /> {t('createEvent')}
         </button>
       </div>
 
-      <ModalSheet open={submitOpen} onClose={() => setSubmitOpen(false)} title="Create event">
+      <ModalSheet open={submitOpen} onClose={() => setSubmitOpen(false)} title={t('createEvent')}>
         <SubmitEventForm user={user} onClose={() => setSubmitOpen(false)} onSuccess={() => { setSubmitOpen(false); load(); }} />
       </ModalSheet>
     </div>
@@ -165,7 +166,7 @@ function SubmitEventForm({ user, onClose, onSuccess }: { user: AuthUser; onClose
   if (user.guest || !user.id) {
     return (
       <div className="p-5 text-center">
-        <p className="text-sm text-slate-600">Sign in to create an event.</p>
+        <p className="text-sm text-slate-600">{t('signInToCreateEvent')}</p>
         <button onClick={onClose} className="mt-4 text-crimson font-bold text-sm">{t('close')}</button>
       </div>
     );
@@ -175,7 +176,7 @@ function SubmitEventForm({ user, onClose, onSuccess }: { user: AuthUser; onClose
     return (
       <div className="p-5 text-center">
         <div className="text-4xl mb-2">✅</div>
-        <p className="text-sm text-navy font-semibold">Event submitted for review!</p>
+        <p className="text-sm text-navy font-semibold">{t('eventSubmitted')}</p>
         <button onClick={onSuccess} className="mt-4 w-full bg-crimson text-white font-bold py-3 rounded-xl">{t('close')}</button>
       </div>
     );
@@ -183,7 +184,7 @@ function SubmitEventForm({ user, onClose, onSuccess }: { user: AuthUser; onClose
 
   const submit = async () => {
     if (!form.title || !form.description || !form.date || !form.location) {
-      setError('Please fill all required fields.');
+      setError(t('fillRequired'));
       return;
     }
     setLoading(true);
@@ -205,13 +206,13 @@ function SubmitEventForm({ user, onClose, onSuccess }: { user: AuthUser; onClose
 
   return (
     <div className="p-4 space-y-3 pb-6">
-      <Field label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
-      <Field label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline />
+      <Field label={t('fieldTitle')} value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
+      <Field label={t('fieldDescription')} value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline />
       <Field label="Date" value={form.date} onChange={(v) => setForm({ ...form, date: v })} type="date" />
       <Field label={t('when')} value={form.time} onChange={(v) => setForm({ ...form, time: v })} />
       <Field label={t('where')} value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
       <Field label={t('city')} value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
-      <ImageUpload folder="events" value={imageUrl} onChange={setImageUrl} label="Event photo (optional)" />
+      <ImageUpload folder="events" value={imageUrl} onChange={setImageUrl} label={t('eventPhotoOptional')} />
       {error && <div className="text-xs bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">{error}</div>}
       <button onClick={submit} disabled={loading} className="w-full bg-crimson text-white font-bold py-3.5 rounded-xl disabled:opacity-60">
         {loading ? '…' : t('submit')}
@@ -251,10 +252,16 @@ function EventDetail({
         ) : (
           <span className="text-8xl drop-shadow-2xl">{event.emoji}</span>
         )}
-        <button onClick={onBack} className="absolute top-4 left-4 p-2 rounded-full bg-white/90 text-navy z-10">
+        <button onClick={onBack} className="absolute top-4 left-4 p-2 rounded-full bg-white/90 text-navy z-10 tap-scale shadow-md">
           <ChevronLeft size={20} />
         </button>
-        <button className="absolute top-4 right-4 p-2 rounded-full bg-white/90 text-navy z-10">
+        <button
+          onClick={() => {
+            shareItem({ title: event.title, text: `${event.title} — ${fullDate(event.date)} · ${event.location}`, itemId: event.id, type: 'event' }).catch(() => {});
+          }}
+          aria-label={t('share')}
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/90 text-navy z-10 tap-scale shadow-md"
+        >
           <ShareIcon size={20} />
         </button>
       </div>
@@ -281,9 +288,14 @@ function EventDetail({
           >
             {isGoing ? <><CheckCircle size={16} /> {t('going')}</> : t('rsvp')}
           </button>
-          <button className="py-3 px-2 rounded-xl font-bold text-xs bg-slate-100 text-navy flex items-center justify-center gap-1 min-w-0">
+          <a
+            href={googleCalendarUrl(event)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="py-3 px-2 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-navy flex items-center justify-center gap-1 min-w-0 tap-scale transition-colors"
+          >
             <CalIcon size={16} /> <span className="truncate">{t('addToCalendar')}</span>
-          </button>
+          </a>
         </div>
 
         <div className="mt-4 bg-white rounded-2xl border border-slate-100 p-4">
@@ -314,6 +326,37 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
       </div>
     </div>
   );
+}
+
+/** Parse a "10:00 AM" / "14:30" style string into { h, m } (24h). */
+function parseTime(time: string): { h: number; m: number } {
+  const t = (time || '').trim();
+  const match = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if (!match) return { h: 9, m: 0 };
+  let h = parseInt(match[1], 10);
+  const m = match[2] ? parseInt(match[2], 10) : 0;
+  const mer = match[3]?.toLowerCase();
+  if (mer === 'pm' && h < 12) h += 12;
+  if (mer === 'am' && h === 12) h = 0;
+  return { h: Math.min(h, 23), m: Math.min(m, 59) };
+}
+
+/** Build a Google Calendar "add event" URL (2h default duration). */
+function googleCalendarUrl(event: Event): string {
+  const { h, m } = parseTime(event.time);
+  const start = new Date(`${event.date}T00:00:00`);
+  start.setHours(h, m, 0, 0);
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}00`;
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: event.title,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    details: event.description || '',
+    location: event.location || '',
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
 function fullDate(d: string) {

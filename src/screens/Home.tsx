@@ -5,7 +5,7 @@ import { fetchApprovedPosts } from '../services/posts';
 import { fetchUpcomingEvents } from '../services/events';
 import { SectionHeader } from '../components/Layout';
 import { HomeHero, useHeroSlides } from '../components/HomeHero';
-import { PinnedPostCard, PostDetailSheet, formatPostDate } from '../components/Posts';
+import { PinnedPostCard, PostCard, PostDetailSheet, formatPostDate } from '../components/Posts';
 import { CheckCircle, MapPin, ChevronRight, StarIcon, NewsIcon } from '../components/Icons';
 import { AuthUser } from '../types/auth';
 import { useEffect, useState } from 'react';
@@ -27,10 +27,11 @@ export function Home({
   const heroSlides = useHeroSlides();
   const { detail, openDetail, closeDetail } = useNavigation();
   const [pinned, setPinned] = useState<Post[]>([]);
+  const [latest, setLatest] = useState<Post[]>([]);
   const [featuredBiz, setFeaturedBiz] = useState<Business[]>([]);
   const [upcoming, setUpcoming] = useState<Event[]>([]);
 
-  const selected = detail?.type === 'post' ? pinned.find((p) => {
+  const selected = detail?.type === 'post' ? [...pinned, ...latest].find((p) => {
     const { itemId } = resolveFeedItem(p);
     return itemId === detail.id || p.id === detail.id;
   }) ?? null : null;
@@ -41,7 +42,10 @@ export function Home({
   };
 
   useEffect(() => {
-    fetchApprovedPosts().then((posts) => setPinned(posts.filter((p) => p.pinned)));
+    fetchApprovedPosts().then((posts) => {
+      setPinned(posts.filter((p) => p.pinned));
+      setLatest(posts.filter((p) => !p.pinned).slice(0, 2));
+    });
     fetchFeaturedBusinesses().then(setFeaturedBiz);
     fetchUpcomingEvents(3).then(setUpcoming);
   }, []);
@@ -82,25 +86,29 @@ export function Home({
             </button>
           }
         />
-        <div className="px-4">
-          <button
-            onClick={() => goTo('news')}
-            className="w-full card-modern p-4 text-left tap-scale overflow-hidden relative group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-navy/[0.04] via-transparent to-crimson/[0.08] pointer-events-none" />
-            <div className="relative flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center shrink-0 shadow-lg shadow-navy/25 text-white">
-                <NewsIcon size={26} />
+        <div className="px-4 space-y-3">
+          {latest.length > 0 ? (
+            latest.map((p) => <PostCard key={p.id} post={p} onOpen={openPost} />)
+          ) : (
+            <button
+              onClick={() => goTo('news')}
+              className="w-full card-modern p-4 text-left tap-scale overflow-hidden relative group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-navy/[0.04] via-transparent to-crimson/[0.08] pointer-events-none" />
+              <div className="relative flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center shrink-0 shadow-lg shadow-navy/25 text-white">
+                  <NewsIcon size={26} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-extrabold text-navy font-display">{t('latestNews')}</div>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{t('newsTeaserDesc')}</p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-crimson/10 flex items-center justify-center shrink-0 group-hover:bg-crimson/20 transition-colors">
+                  <ChevronRight size={16} className="text-crimson" />
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-extrabold text-navy font-display">{t('latestNews')}</div>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">Community news, alerts, church updates & more</p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-crimson/10 flex items-center justify-center shrink-0 group-hover:bg-crimson/20 transition-colors">
-                <ChevronRight size={16} className="text-crimson" />
-              </div>
-            </div>
-          </button>
+            </button>
+          )}
         </div>
       </section>
 

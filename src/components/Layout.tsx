@@ -111,12 +111,16 @@ function NavBtn({ icon, label, active, onClick }: { icon: ReactNode; label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-2xl min-w-0 w-full tap-scale transition-colors ${
+      aria-current={active ? 'page' : undefined}
+      className={`relative flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-2xl min-w-0 w-full tap-scale transition-colors duration-200 ${
         active ? 'text-crimson' : 'text-slate-400 hover:text-navy'
       }`}
     >
+      {active && (
+        <span className="absolute -top-[7px] left-1/2 -translate-x-1/2 h-1 w-6 rounded-full bg-gradient-to-r from-crimson to-crimson-dark animate-nav-glow" />
+      )}
       <div className={`shrink-0 p-1.5 rounded-xl transition-all duration-200 ${active ? 'nav-btn-active animate-nav-glow' : ''}`}>{icon}</div>
-      <span className={`text-[8px] leading-[1.1] text-center line-clamp-2 w-full tracking-wide ${active ? 'font-extrabold' : 'font-semibold'}`}>{label}</span>
+      <span className={`text-[8px] leading-[1.1] text-center line-clamp-2 w-full tracking-wide transition-all ${active ? 'font-extrabold' : 'font-semibold'}`}>{label}</span>
     </button>
   );
 }
@@ -126,6 +130,25 @@ export function SectionHeader({ title, action }: { title: string; action?: React
     <div className="flex items-center gap-2 px-4 mt-7 mb-3 min-w-0 max-w-full">
       <h2 className="text-[0.95rem] font-extrabold text-navy min-w-0 flex-1 leading-snug truncate section-accent">{title}</h2>
       {action && <div className="shrink-0 max-w-[38%]">{action}</div>}
+    </div>
+  );
+}
+
+/** Skeleton placeholder rows for list screens (premium loading state). */
+export function ListSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-3" aria-hidden>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 flex gap-3">
+          <div className="skeleton w-16 h-16 rounded-xl shrink-0" />
+          <div className="flex-1 min-w-0 space-y-2 py-1">
+            <div className="skeleton h-3.5 w-2/3 rounded-full" />
+            <div className="skeleton h-3 w-1/2 rounded-full" />
+            <div className="skeleton h-3 w-full rounded-full" />
+            <div className="skeleton h-3 w-4/5 rounded-full" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

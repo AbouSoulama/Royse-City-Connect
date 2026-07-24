@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useT } from '../i18n';
 import { Job } from '../data';
-import { ModalSheet } from '../components/Layout';
+import { ModalSheet, ListSkeleton } from '../components/Layout';
 import type { AuthUser } from '../types/auth';
 import type { JobType } from '../types/database';
 import { ImageUpload } from '../components/ImageUpload';
@@ -51,7 +51,7 @@ export function Opportunities({ user }: { user: AuthUser }) {
     <div className="pb-4 w-full max-w-full min-w-0 overflow-x-hidden box-border">
       <div className="page-header px-4 pt-4 pb-3 sticky top-0 z-10">
         <h1 className="text-xl font-extrabold text-navy font-display tracking-tight">{t('opportunities')}</h1>
-        <p className="text-xs text-slate-500 mt-0.5">{filtered.length} jobs and opportunities</p>
+        <p className="text-xs text-slate-500 mt-0.5">{filtered.length} {t('jobsAndOpportunities')}</p>
 
         <div className="mt-3 flex items-center gap-2 bg-navy/[0.05] rounded-2xl px-3.5 py-2.5 border border-navy/[0.04]">
           <SearchIcon size={18} className="text-slate-400" />
@@ -79,7 +79,7 @@ export function Opportunities({ user }: { user: AuthUser }) {
       </div>
 
       <div className="p-4 space-y-3">
-        {loading && <div className="text-center text-sm text-slate-400 py-8">Loading jobs…</div>}
+        {loading && <ListSkeleton count={5} />}
         {!loading && filtered.length === 0 && (
           <div className="text-center py-12 px-4">
             <div className="text-4xl mb-3">💼</div>
@@ -128,7 +128,7 @@ export function Opportunities({ user }: { user: AuthUser }) {
       </div>
 
       <ModalSheet open={submitOpen} onClose={() => setSubmitOpen(false)} title={t('postOpportunity')}>
-        <SubmitJobForm user={user} onClose={() => setSubmitOpen(false)} onSuccess={() => { setSubmitOpen(false); }} />
+        <SubmitJobForm user={user} onClose={() => setSubmitOpen(false)} onSuccess={() => { setSubmitOpen(false); load(); }} />
       </ModalSheet>
     </div>
   );
@@ -152,7 +152,7 @@ function SubmitJobForm({ user, onClose, onSuccess }: { user: AuthUser; onClose: 
   if (user.guest || !user.id) {
     return (
       <div className="p-5 text-center">
-        <p className="text-sm text-slate-600">Sign in to post an opportunity.</p>
+        <p className="text-sm text-slate-600">{t('signInToPostJob')}</p>
         <button onClick={onClose} className="mt-4 text-crimson font-bold text-sm">{t('close')}</button>
       </div>
     );
@@ -162,7 +162,7 @@ function SubmitJobForm({ user, onClose, onSuccess }: { user: AuthUser; onClose: 
     return (
       <div className="p-5 text-center">
         <div className="text-4xl mb-2">✅</div>
-        <p className="text-sm text-navy font-semibold">Job submitted for review!</p>
+        <p className="text-sm text-navy font-semibold">{t('jobSubmitted')}</p>
         <button onClick={onSuccess} className="mt-4 w-full bg-crimson text-white font-bold py-3 rounded-xl">{t('close')}</button>
       </div>
     );
@@ -170,7 +170,7 @@ function SubmitJobForm({ user, onClose, onSuccess }: { user: AuthUser; onClose: 
 
   const submit = async () => {
     if (!form.title || !form.description || !form.location || !form.contact) {
-      setError('Please fill all required fields.');
+      setError(t('fillRequired'));
       return;
     }
     setLoading(true);
@@ -192,14 +192,14 @@ function SubmitJobForm({ user, onClose, onSuccess }: { user: AuthUser; onClose: 
 
   return (
     <div className="p-4 space-y-3 pb-6">
-      <Field label="Job title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
-      <Field label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline />
+      <Field label={t('fieldJobTitle')} value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
+      <Field label={t('fieldDescription')} value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline />
       <Field label={t('location')} value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
       <Field label={t('contact')} value={form.contact} onChange={(v) => setForm({ ...form, contact: v })} />
-      <ImageUpload folder="jobs" value={imageUrl} onChange={setImageUrl} label="Photo (optional)" />
+      <ImageUpload folder="jobs" value={imageUrl} onChange={setImageUrl} label={t('photoOptional')} />
       <Field label={t('expires')} value={form.expires} onChange={(v) => setForm({ ...form, expires: v })} type="date" />
       <label className="block">
-        <span className="text-xs font-bold text-slate-600">Type</span>
+        <span className="text-xs font-bold text-slate-600">{t('fieldType')}</span>
         <select
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value as JobType })}
